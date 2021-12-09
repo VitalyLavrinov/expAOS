@@ -20,7 +20,6 @@
 
 std::string WFSini = "defaultWFS.ini"; // change to const later
 std::string Lensini = "strlenses.ini";
-std::string Fodir = "FO";
 CWFSControler pWFS(WFSini, "DEV_1AB228000271");
 
 CVLT pVLT;//Voltage window
@@ -56,6 +55,9 @@ BEGIN_MESSAGE_MAP(CexpAOSDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BtnGrab, &CexpAOSDlg::OnBnClickedBtngrab)
 	ON_BN_CLICKED(IDC_BtnWFSMirrConnect, &CexpAOSDlg::OnBnClickedBtnwfsmirrconnect)
 	ON_BN_CLICKED(IDC_BtnWFSMirrShowGUI, &CexpAOSDlg::OnBnClickedBtnwfsmirrshowgui)
+	ON_BN_CLICKED(IDC_BSAVEZRNK, &CexpAOSDlg::OnBnClickedBsavezrnk)
+	ON_BN_CLICKED(IDC_BGRABFO, &CexpAOSDlg::OnBnClickedBgrabfo)
+	ON_BN_CLICKED(IDC_BSETVLTTOE, &CexpAOSDlg::OnBnClickedBsetvlttoe)
 END_MESSAGE_MAP()
 
 void CexpAOSDlg::ShowFrameDataWfs(cv::Mat& out) {
@@ -113,6 +115,7 @@ void CexpAOSDlg::ShowFrameDataWfs(cv::Mat& out) {
 	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
 	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
 	*/
+
 	pWFS.Get_WFSMirrU(pWFS.rfPLAll, pWFS.wfCTl, pWFS.UMirrAll);
 	ShowVLT();
 
@@ -374,15 +377,16 @@ void CexpAOSDlg::IniVLT() {
 void CexpAOSDlg::ShowVLT() {
 	CString str;
 	int n = 0;
+	int actid = 0;
 	for (int i = 0; i < pWFS.Get_WFSMirrnact(); i++) {
-		str.Format("%u", i + 1);
-		pVLT.m_VLTS.SetItemText(i, 0, str);
 
-		if (pWFS.actarray.at<UINT8>(i) == 1) str.Format("%3.2f", pWFS.UMirrAll.at<double>(i));
-		else str = "0.0";
+		if (pWFS.actarray.at<UINT8>(i) == 1) {
+			str.Format("%3.2f", pWFS.UMirrAll.at<double>(actid));
+			actid++;
+		}
+		else str = "-";
+
 		pVLT.m_VLTS.SetItemText(i, 1, str);
-
-
 	}
 }
 
@@ -391,8 +395,8 @@ void CexpAOSDlg::ShowZRNK() {
 	CString str;
 	int n = 0;
 	for (int i = 0; i < pWFS.Get_npzrnk(); i++) {
-		str.Format("%u", i + 1);
-		pZRNK.m_ZRNK.SetItemText(i, 0, str);
+	//	str.Format("%u", i + 1);
+	//	pZRNK.m_ZRNK.SetItemText(i, 0, str);
 
 		str.Format("%3.2f", pWFS.wfCT.at<double>(i));
 		pZRNK.m_ZRNK.SetItemText(i, 1, str);
@@ -428,8 +432,16 @@ BOOL CexpAOSDlg::OnInitDialog()
 
 	pWFS.CheckLens(Lensini);
 
-	SetDlgItemInt(IDC_SNFO, pWFS.WFSMirrLoadFO(Fodir));
+	SetDlgItemInt(IDC_SNFO, pWFS.Get_WFSMirrnactiveact());
+	CString str;
+	str.Format("%2.3f", pWFS.Get_WFSMirrcoef());
+	SetDlgItemText(IDC_ECOEF, str);
+	str.Format("%3.1f", pWFS.Get_WFSMirru0());
+	SetDlgItemText(IDC_SU0, str);
 
+	SetDlgItemInt(IDC_EELK,0);
+	SetDlgItemText(IDC_EVLTG, "0.0");
+	
 	pCT.Create(IDD_CT, this);
 	pCT.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOSIZE);
 	pVLT.Create(IDD_DVLT, this);
@@ -597,20 +609,27 @@ UINT ThreadDrowWFSLoop(LPVOID pParam)
 					pWFS.frames[j].receiveStatus = -1;
 
 					pWFS.GetCTOffsetsWfs(pWFS.outframe);
-				    pWFS.CTDeqAdd();
-					//pWFS.wfCT = pWFS.Get_Zrnk(pWFS.CTMaxDifl, pWFS.Fmatl);
+				    //pWFS.CTDeqAdd();
+					
+					pWFS.wfCTl = pWFS.Get_Zrnk(pWFS.CTMaxDifl, pWFS.Fmatl);
+					pWFS.Get_WFSMirrU(pWFS.rfPLAll, pWFS.wfCTl, pWFS.UMirrAll);
+
+					pWFS.WFSMirrSetUGroup(pWFS.UMirrAll);
+
+					
+					ptrView->ShowVLT();
 
 					fd = pWFS.fpsiter();
 					if (i >= cnt) {
-						    pWFS.GetStatCTDeq();
-							ptrView->ShowSubStat();
+						    // pWFS.GetStatCTDeq();
+							//ptrView->ShowSubStat();
 							fd > 0.0 ? fd = pWFS.getfps() : fd = 2.0;//gag
-							pWFS.GetR0(pWFS.CTdecY);
-							ptrView->ShowCn2Stat();
-							pWFS.Spectrum(cnt - 1, 1.0, fd / 2, fd, pWFS.CTdecX, pWFS.SpecX);// x axis coords
-							pWFS.Spectrum(cnt - 1, 1.0, fd / 2, fd, pWFS.CTdecY, pWFS.SpecY);// y axis coords
-							pWFS.DrowSpectrum(cnt, 820, 280, scl, static_cast<int>(fd), pWFS.SpecX);
-							pWFS.DrowSpectrum(cnt, 820, 600, scl, static_cast<int>(fd), pWFS.SpecY);
+							//pWFS.GetR0(pWFS.CTdecY);
+							//ptrView->ShowCn2Stat();
+							//pWFS.Spectrum(cnt - 1, 1.0, fd / 2, fd, pWFS.CTdecX, pWFS.SpecX);// x axis coords
+							//pWFS.Spectrum(cnt - 1, 1.0, fd / 2, fd, pWFS.CTdecY, pWFS.SpecY);// y axis coords
+							//pWFS.DrowSpectrum(cnt, 820, 280, scl, static_cast<int>(fd), pWFS.SpecX);
+							//pWFS.DrowSpectrum(cnt, 820, 600, scl, static_cast<int>(fd), pWFS.SpecY);
 
 							ptrView->SetDlgItemInt(IDC_SWFSFPS, static_cast<int>(fd));
 						i=0;
@@ -813,13 +832,13 @@ UINT ThreadGrabWFS(LPVOID pParam)
 
 void CexpAOSDlg::OnBnClickedBtnwfsmirrconnect()
 {
-	pWFS.WFSMirrConnect();
+	if(!pWFS.Get_WFSMirrConnected())	pWFS.WFSMirrConnect();
 }
 
 
 void CexpAOSDlg::OnBnClickedBtnwfsmirrshowgui()
 {
-	pWFS.WFSMirrShowGUI();
+	if(pWFS.Get_WFSMirrConnected())pWFS.WFSMirrShowGUI();
 }
 
 
@@ -829,4 +848,82 @@ BOOL CexpAOSDlg::DestroyWindow()
 	pWFS.~CWFSControler();
 
 	return CDialogEx::DestroyWindow();
+}
+
+
+void CexpAOSDlg::OnBnClickedBsavezrnk()
+{
+	//save file dlg
+	CFileDialog fileDialog(FALSE, NULL, "*.txt");
+	int result = fileDialog.DoModal();
+	if (result == IDOK)
+	{
+		CString fnamestr = fileDialog.GetPathName();
+		std::string stdfnamestr(fnamestr, fnamestr.GetLength());
+		pWFS.SaveFrameZrnk(stdfnamestr, pWFS.wfCTl);
+	}
+}
+
+
+void CexpAOSDlg::OnBnClickedBgrabfo()
+{
+	SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+	AfxBeginThread(ThreadGrabFO, this, THREAD_PRIORITY_TIME_CRITICAL);
+}
+
+UINT ThreadGrabFO(LPVOID pParam)
+{
+	CexpAOSDlg* ptrView = (CexpAOSDlg*)pParam;
+	double MAX,MIN;
+	std::string fname;
+	std::string fo = FODIR;
+	int cnt = 100;// the number of iterations for averaging the coefficients
+
+	if (!pWFS.m_FSTART) {
+		for (int ielk = 0; ielk < pWFS.Get_WFSMirrnact(); ielk++) {
+			ptrView->SetDlgItemInt(IDC_EELK, ielk);
+			pWFS.WFSMirrSetAllZero();
+			Sleep(400);
+			ptrView->OnBnClickedBtngerefwfs();
+			pWFS.WFSMirrSetActU(ielk, pWFS.Get_WFSMirru0());
+			Sleep(400);
+
+
+			pWFS.GetAccumFrames(cnt);
+			pWFS.accumframe.convertTo(pWFS.outframe, CV_8UC1, 1.0);
+			pWFS.accumframe.zeros(pWFS.Get_cdx(), pWFS.Get_cdy(), CV_64F);
+
+
+			pWFS.DrowFrame(pWFS.outframe, 5, 5, 0.5);
+			pWFS.GetCTOffsetsWfs(pWFS.outframe);
+			ptrView->ShowCT();
+			pWFS.wfCTl = pWFS.Get_Zrnk(pWFS.CTMaxDifl, pWFS.Fmatl);
+			ptrView->ShowZRNK();
+			pWFS.GetWF(pWFS.wfCTl, 0, 0);
+			pWFS.DrowPhase(460, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
+			pWFS.DrowPhase(460, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
+
+			
+		    minMaxLoc(pWFS.wfCTl, &MIN, &MAX,NULL, NULL);
+			if (abs(MIN) > MAX)MAX = abs(MIN);
+
+			fname= fo + "\\controlF" + std::to_string(ielk) + ".txt";
+
+			if (MAX > 0.3) {
+           		   pWFS.SaveFrameZrnk(fname, pWFS.wfCTl);
+			}
+		}
+		pWFS.WFSMirrLoadFO(fo);
+	}
+			
+	SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
+	return 0;
+}
+
+void CexpAOSDlg::OnBnClickedBsetvlttoe()
+{
+	CString str;
+	int elec = GetDlgItemInt(IDC_EELK);
+	GetDlgItemText(IDC_EVLTG,str);
+	pWFS.WFSMirrSetActU(elec, atof(str));
 }

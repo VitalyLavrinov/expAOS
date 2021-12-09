@@ -64,7 +64,7 @@ constexpr int FRAME_COUNT(3); //cnt frames to asynchronous input
             bool m_FSTART;
             CCamera();
             CCamera(const std::string &ini, const char* CamId);
-            ~CCamera() { m_FSTART = 0; CameraClose();/* VmbShutdown();*/ }
+            ~CCamera() { m_FSTART = 0; CameraClose(); /*VmbShutdown();*/ }
             bool CameraConnect(); //Connect Camera by id;
             void CameraClose();// camera kill
             int GetCamExpos();//get expos from camera

@@ -40,7 +40,7 @@ private:
 	cv::Mat y0;
 	cv::Mat x0l; // -||- but only active lenses
 	cv::Mat y0l; // -||- but only active lenses
-	cv::Mat accumframe;// array to get rafframe from cnt frames
+
 
 	/*zernike modes & wavefront surface*/
 	cv::Mat x_lens; //grid to WF
@@ -77,6 +77,7 @@ private:
 public:
 	using CCamera::frames;//frames buffer
 	cv::Mat outframe;// drow array
+	cv::Mat accumframe;// array to get rafframe from cnt frames
 	cv::Mat_<cv::Point> tPtr; //left top points of subapertures
 	cv::Mat Lenses;//active lenses in rastr
 	cv::Mat_<cv::Point> subMax; //maxval coords in subapertures 
@@ -111,6 +112,7 @@ public:
 	virtual void DrowFrame(const cv::Mat& out, int left, int top, double scale) const; //Drow cam.frame with left top offsets with scale. 
 	virtual void DrowSub(const cv::Mat& out, int left, int top, double scale) const;
 	void CheckLens(const std::string& ini);// read active lenses from file & reload data as need
+	void GetAccumFrames(int cnt);//get accumulate cnt frames matrix with tresholding   into cvMat accumframe
     void GetRefFrame(int cnt); // get refframe from sensor cam
 
 	/*CofG offsets*/
@@ -121,7 +123,8 @@ public:
 	void GetCTWfsCorr(const cv::Mat& src);//calc subapertures images offsets
 
 	/*coef. Zernike modes*/
-	cv::Mat Get_Zrnk(cv::Mat& difcor, cv::Mat refar);//calculate Zernike coef.
+	cv::Mat Get_Zrnk(cv::Mat& difcor, cv::Mat& refar);//calculate Zernike coef.
+	void SaveFrameZrnk(std::string filename, cv::Mat& ZRNK);//saveing zernike coef. like *txt file
 	void GetWF(cv::Mat& wfzrnk, int begin, int endshft);//calculate wavefront surface & interferogram
 	void DrowPhase(int left, int top, double scale, int interfer);// drow wave front surfsce if  interfer==1 interferogram
 
@@ -131,6 +134,9 @@ public:
 	void SetLensesMoreThanI(int in); // active lenses choice by intensity
 	virtual void SaveIni(const std::string& ini) const;//save sensor propeties to ini file, boost::fsystem format of writing and reading raises questions !!!
 
+
+	int Get_cdx() const { return m_cdx; }//getter
+	int Get_cdy() const { return m_cdy; }//getter
 	int Get_sdx() const { return m_sdx; }//getter
 	int Get_sdy() const { return m_sdy; }//getter
 	int Get_swnd() const { return m_swnd; }//getter

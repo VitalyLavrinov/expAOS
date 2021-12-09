@@ -9,9 +9,10 @@
 #include "CWFSPROP.h"
 #include "CVLT.h"
 
-UINT ThreadDrowWFS(LPVOID pParam);
-UINT ThreadGrabWFS(LPVOID pParam);
-UINT ThreadDrowWFSLoop(LPVOID pParam);
+UINT ThreadDrowWFS(LPVOID pParam);// wavefront sensor
+UINT ThreadGrabWFS(LPVOID pParam);// grab *flm from wavefront sensor
+UINT ThreadDrowWFSLoop(LPVOID pParam);//close loop
+UINT ThreadGrabFO(LPVOID pParam);// get response function from mirror
 
 // CexpAOSDlg dialog
 class CexpAOSDlg : public CDialogEx
@@ -66,4 +67,7 @@ public:
 	afx_msg void OnBnClickedBtnwfsmirrconnect();
 	afx_msg void OnBnClickedBtnwfsmirrshowgui();
 	virtual BOOL DestroyWindow();
+	afx_msg void OnBnClickedBsavezrnk();
+	afx_msg void OnBnClickedBgrabfo();
+	afx_msg void OnBnClickedBsetvlttoe();
 };

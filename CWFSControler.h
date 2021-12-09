@@ -5,14 +5,13 @@
 constexpr int DEVN(31);// for U-Flex-56-HEX-59
 constexpr LPCSTR DEVSTR("eth_Xv622.dll");// dll for U-Flex-56-HEX-59
 constexpr int NACT(59);// 59 electrodes are used
-
-//constexpr char FODIR[] = "FO";// mmmmmm  more then 20++ std::string DIR("FO");
+constexpr char FODIR[] = "FO";// mmmmmm  more then 20++ std::string DIR("FO");
 
 class CWFSControler : public CSensor
 {
 private:
 	WFC_INTERFACE m_WFCI; // mirror interface
-
+	HMODULE hdll = NULL;//mirror dll handle
 	/*Prop to control mirror*/
 	double m_coef; // feedback ratio to get  mirror voltages 
 	int m_nact;  //cnt mirror actuators
@@ -28,11 +27,15 @@ public:
 	CWFSControler(const std::string& ini, const char* CamId);
 	~CWFSControler() //Must Set mirror poweroff & high Voltage to OFF !! if PC poweroff we will have problem.
 	{
-		//if (Get_WFSMirrConnected()) {
-		//	if (Get_WFSMirrHVon())WFSMirrSetAllZero();
-		//	m_WFCI.MirrorSetHighVoltage(FALSE);
-		//	m_WFCI.MirrorSetPower(FALSE); 
-		//}
+		if (Get_WFSMirrConnected()) {
+			if (Get_WFSMirrHVon())WFSMirrSetAllZero();
+			m_WFCI.MirrorSetHighVoltage(FALSE);
+			m_WFCI.MirrorSetPower(FALSE); 
+		}
+		if (hdll) {
+			FreeLibrary(hdll);
+			hdll = NULL;
+		}
 	}
 	void WFSMirrConnect();//connect mirror see const DEVN, DEVSTR for U-Flex-56-HEX-59
 	void WFSMirrShowGUI();// show GUI from mirror manufacturer

@@ -85,6 +85,18 @@
 #define IDC_BtnWFSMirrShowGUI           1046
 #define IDC_SNFO                        1047
 #define IDC_SS13                        1048
+#define IDC_SS14                        1050
+#define IDC_BSAVEZRNK                   1051
+#define IDC_BGRABFO                     1052
+#define IDC_EELK                        1053
+#define IDC_SU0                         1054
+#define IDC_SS15                        1055
+#define IDC_SS16                        1056
+#define IDC_BGRABFO2                    1057
+#define IDC_BSETVLTTOE                  1057
+#define IDC_ECOEF                       1058
+#define IDC_EVLTG                       1059
+#define IDC_SS17                        1060
 
 // Next default values for new objects
 // 

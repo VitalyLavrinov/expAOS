@@ -8,17 +8,17 @@ CWFSControler::CWFSControler() : CSensor() {
 	m_nact = NACT;
 	m_coef = 0.5;
 	m_u0 = 100.0;
+	std::string fo = FODIR;
+	WFSMirrLoadFO(fo);
 }
 
 CWFSControler::CWFSControler(const std::string& ini, const char* CamId) : CSensor(ini, CamId) {
 	m_MConnected = false;
 	m_HVon = false;
 	m_nact = NACT;
-	//LoadMirrIni(const std::string& ini)
-	//WFSMirrCheckFO("FO"); 
-	//WFSMirrLoadFO("FO");
-	m_coef = 0.5;
-	m_u0 = 100.0;
+	LoadMirrIni(ini);
+	std::string fo = FODIR;
+	WFSMirrLoadFO(fo);
 }
 
 void CWFSControler::LoadMirrIni(const std::string& ini) {
@@ -71,7 +71,6 @@ static int LoadMirrorDLL(LPCSTR dllname, HMODULE& h, WFC_INTERFACE* bi)// loaded
 
 //connect mirror see const DEVN, DEVSTR for U-Flex-56-HEX-59
 void CWFSControler::WFSMirrConnect() {
-	HMODULE hdll = NULL;
 	m_MConnected = false;
 	if (LoadMirrorDLL(DEVSTR, hdll, &m_WFCI) == 0) {
 		if (m_WFCI.MirrorCheckDevNum) {
@@ -79,7 +78,7 @@ void CWFSControler::WFSMirrConnect() {
 			x = m_WFCI.MirrorCheckDevNum(DEVN);
 			if (x == 0xffffffff) {
 				m_MConnected = false;
-			}
+			} else  m_MConnected = true;
 		}
 	}
 }
@@ -110,25 +109,29 @@ void CWFSControler::WFSMirrSetUGroup(cv::Mat& D)
 {
 	UApplied = D * m_coef;
 	int actid = 0;
-	for (int i = 1; i <= m_nact; i++) {
-		if (actarray.at<UINT8>(i - 1) == 1) {
-			m_WFCI.MirrorSetGroupVoltage(i * -1, UApplied.at<double>(i-1), false); //if -i then voltage  written to the mirror memory only
+	for (int i = 1; i <=m_nact; i++) {
+		if (actarray.at<UINT8>(i-1) == 1) {
+			m_WFCI.MirrorSetGroupVoltage(i * -1, UApplied.at<double>(actid), false); //if -i then voltage  written to the mirror memory only
 			actid++;
 		}
-		else m_WFCI.MirrorSetGroupVoltage(i * -1, 0.0, false);
+	    else m_WFCI.MirrorSetGroupVoltage(i * -1, 0.0, false);
 	}
-	m_WFCI.MirrorSetGroupVoltage(0, 0., true);//apply voltages all at once
+	//if (m_HVon) 
+		m_WFCI.MirrorSetGroupVoltage(0, 0., true);//apply voltages all at once
 }
 //set all 0.0 voltages
 void CWFSControler::WFSMirrSetAllZero() {
+	//if (m_HVon) 
 	m_WFCI.MirrorSetAllVoltage(0.0, true);
 }
 
 //set on id mirror electrode voltage val another set 0.0
 void CWFSControler::WFSMirrSetActU(int id, double val)
 {
-	m_WFCI.MirrorSetAllVoltage(0.0, true);
-	m_WFCI.MirrorSetVoltage(id, val, true);
+	//if (m_HVon) {
+		m_WFCI.MirrorSetAllVoltage(0.0, true);
+		m_WFCI.MirrorSetVoltage(id, val, true);
+	//}
 }
 
 //calculate mirror electrode voltages from frame zrnk coef.

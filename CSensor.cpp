@@ -617,25 +617,31 @@ void CSensor::GetCTOffsetsWfs(cv::Mat& src) {
 		}
 }
 
+//get accumulate cnt frames matrix with tresholding   into cvMat accumframe
+void CSensor::GetAccumFrames(int cnt) {
+	cv::Mat treshedframe;
+	int i = 0;
+	for (int ikl = 0; ikl < cnt; ikl++) {
+		if (CameraFrameN()) {
+			for (int j = 0; j < FRAME_COUNT; j++) {
+				if (frames[j].receiveStatus == 0) {
+					outframe.data = static_cast<uchar*>(frames[j].buffer);
+					cv::threshold(outframe, treshedframe, m_treshlow, m_treshhigh, CV_THRESH_TOZERO);
+					cv::accumulate(treshedframe, accumframe);
+					i++;
+					frames[j].receiveStatus = -1;
+				}
+			}
+
+		}
+	}
+	accumframe = accumframe / i;
+}
+
 // get refframe from sensor cam
 void CSensor::GetRefFrame(int cnt) {
-	cv::Mat treshedframe; 
-	int i = 0;
-		for (int ikl = 0; ikl < cnt; ikl++) {
-			if (CameraFrameN()) {
-				for (int j = 0; j < FRAME_COUNT; j++) {
-					if (frames[j].receiveStatus == 0) {
-						outframe.data = static_cast<uchar*>(frames[j].buffer);
-						cv::threshold(outframe, treshedframe, m_treshlow, m_treshhigh, CV_THRESH_TOZERO);
-						cv::accumulate(treshedframe, accumframe);
-						i++;
-						frames[j].receiveStatus = -1;
-					}
-				}
-				
-			}
-		}
-		accumframe = accumframe / i;
+	    cv::Mat acc;
+		GetAccumFrames(cnt);
 		/**/
 		//may be bad to a point source(need use lust frame without accum?) in closeloop pointless
 		//outframe.copyTo(ReffKor); 
@@ -651,11 +657,23 @@ void CSensor::GetRefFrame(int cnt) {
 }
 
 //calculate coef. Zernike offsets from difcor
-cv::Mat CSensor::Get_Zrnk(cv::Mat& difcor, cv::Mat F){
+cv::Mat CSensor::Get_Zrnk(cv::Mat& difcor, cv::Mat& F){
 	cv::Mat dst;
 	difcor *= m_coefshift;
 	dst = difcor * F;
 	return dst;
+}
+
+//saveing zernike coef. like *txt file
+void  CSensor::SaveFrameZrnk(std::string filename, cv::Mat& ZRNK) {
+	std::ofstream outf(filename);
+	if (outf.is_open()) {
+		for (int i = 0; i < m_npzrnk; i++)
+		{
+			outf << ZRNK.at<double>(i) << std::endl;
+		}
+		outf.close();
+	}
 }
 
 //calculate wavefront surface & interferogram
