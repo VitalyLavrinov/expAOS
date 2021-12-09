@@ -3,10 +3,11 @@
 //
 
 #pragma once
-#include "CSensor.h"
+#include "CWFSControler.h"
 #include "CCT.h"
 #include "CZRNK.h"
 #include "CWFSPROP.h"
+#include "CVLT.h"
 
 UINT ThreadDrowWFS(LPVOID pParam);
 UINT ThreadGrabWFS(LPVOID pParam);
@@ -45,12 +46,15 @@ public:
 	afx_msg void OnBnClickedBtngerefwfs();
 	afx_msg void OnBnClickedBtnclosewfs();
 	afx_msg void OnBnClickedBtnwfsleschoise();
+	afx_msg void ShowFrameDataWfsOne(cv::Mat& out);
 	afx_msg void ShowFrameDataWfs(cv::Mat& out);
 	afx_msg void IniCT();
+	afx_msg void IniVLT();
 	afx_msg void ShowCT();
 	afx_msg void ShowCorr();
 	afx_msg void IniZRNK();
 	afx_msg void ShowZRNK();
+	afx_msg void ShowVLT();
 	afx_msg void IniLensButt();
 	afx_msg void ShowSubStat();
 	afx_msg void ShowCn2Stat();
@@ -59,4 +63,7 @@ public:
 	afx_msg void OnBnClickedBtncnnctwfs2();
 	afx_msg void OnBnClickedBtnsetlmore();
 	afx_msg void OnBnClickedBtngrab();
+	afx_msg void OnBnClickedBtnwfsmirrconnect();
+	afx_msg void OnBnClickedBtnwfsmirrshowgui();
+	virtual BOOL DestroyWindow();
 };

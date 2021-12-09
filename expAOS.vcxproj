@@ -191,6 +191,8 @@
     <ClInclude Include="CCamera.h" />
     <ClInclude Include="CCT.h" />
     <ClInclude Include="CSensor.h" />
+    <ClInclude Include="CVLT.h" />
+    <ClInclude Include="CWFSControler.h" />
     <ClInclude Include="CWFSPROP.h" />
     <ClInclude Include="CZRNK.h" />
     <ClInclude Include="expAOS.h" />
@@ -199,11 +201,16 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="VimbaC.h" />
+    <ClInclude Include="VmbCommonTypes.h" />
+    <ClInclude Include="WFCinterface.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CCamera.cpp" />
     <ClCompile Include="CCT.cpp" />
     <ClCompile Include="CSensor.cpp" />
+    <ClCompile Include="CVLT.cpp" />
+    <ClCompile Include="CWFSControler.cpp" />
     <ClCompile Include="CWFSPROP.cpp" />
     <ClCompile Include="CZRNK.cpp" />
     <ClCompile Include="expAOS.cpp" />

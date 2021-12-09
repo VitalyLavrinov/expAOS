@@ -2,7 +2,7 @@
 // need to use JSON instead of boostini
 #include "pch.h"
 #include "CSensor.h"
-#include <numeric>
+
 
 CSensor::CSensor() : CCamera() {
 	LoadIni("default.ini");
@@ -1107,15 +1107,15 @@ void CSensor::Pre_Zrnk(cv::Mat& r,int nlens, int cntzrnk,const cv::Mat& x,const 
 			j += 2;
 		}
 	}
-	cv::mulTransposed(rx, rcft, 0);//B=(A*AT)  
+
+	cv::mulTransposed(rx, rcft, FALSE);//B=(A*AT)  
 	cv::invert(rcft, ry);// C=B^(-1)=(A*AT)^(-1)  
-	r = rx.t() * ry;
+	r = rx.t() * ry;// AT*C
 }
 
 
 
 void CSensor::GetR0 (std::deque<double>& diff) {
-	double disp,sd;
 	double  powdisp, powlLwave, powDa, powd,dst, powdst;
 
 	double rad = (PI / 180);

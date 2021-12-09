@@ -1,7 +1,6 @@
 #pragma once
 #include "CCamera.h"  
 
-
 class CSensor : public CCamera
 {
 private:
@@ -37,49 +36,47 @@ private:
 
 	cv::Mat_<cv::Rect> wnds;// analysis window rects
 	cv::Mat_<cv::Rect> subs;// subapertures rects
-	cv::Mat x0; //
+	cv::Mat x0; // grid to zrnk coef
 	cv::Mat y0;
 	cv::Mat x0l; // -||- but only active lenses
 	cv::Mat y0l; // -||- but only active lenses
 	cv::Mat accumframe;// array to get rafframe from cnt frames
 
 	/*zernike modes & wavefront surface*/
-	cv::Mat x_lens;
-	cv::Mat y_lens;
-	cv::Mat Pzrnk;
-	cv::Mat wfphase;
-	cv::Mat wfinterf;
+	cv::Mat x_lens; //grid to WF
+	cv::Mat y_lens; //grid to WF
+	cv::Mat Pzrnk; // zrnk coef.
+	cv::Mat wfphase;//drow phase array 
+	cv::Mat wfinterf;//drow  array 
 
 	void Plnm_Zrnk(double u, double v);//Zernike modes to xylens grid to drow wavefront surface
 	void Pre_Zrnk(cv::Mat& r, int nlens, int cntzrnk, const cv::Mat& x, const cv::Mat& y, int tt);//Pre-calculation AT*(AT*A)^(-1)=F 
 	void AlgRWF(cv::Mat& r, int i, double u, double  v); //Zernike modes in polar coordinates without 
 	void AlgRWFTT(cv::Mat& r, int i, double u, double  v); //Zernike modes in polar coordinates without Tip/Tilt
 
-	void LoadIni(const std::string& ini);
+	void LoadIni(const std::string& ini);// boost::fsystem format of writing and reading raises questions !!!
 
+	unsigned int m_Speccnt;// sample length for spectrum calc
+	unsigned int m_idframe;//
+	cv::Point2d m_maxindec;// max val in deque of (x,y)
+	cv::Point2d m_averindec;// abs(mean) val in deque of (x,y)
 
+	int m_subtrah; // subaperture number to diff subtraction
+	double m_EntranceDiameter;// of telescope? or beam on photodetector matrix? !!!
+	double m_distbetSub;//subaperture diameter....inscribed or circumscribed circle?!!!
+	double m_R0k1;// constants of the formula 
+	double m_R0k2;//for calculating the coefficients 
+	double m_R0k3;//of the structure function 
+	double m_Cn2k1;//of the refractive index
+	double m_Cn2k2;// loading from ini? !!!
 
-	unsigned int m_Speccnt;
-	unsigned int m_idframe;
-	cv::Point2d m_maxindec;
-	cv::Point2d m_averindec;
-
-	int m_subtrah;
-	double m_EntranceDiameter;
-	double m_distbetSub;
-	double m_R0k1;
-	double m_R0k2;
-	double m_R0k3;
-	double m_Cn2k1;
-	double m_Cn2k2;
-
-	double m_Dispersion;
-	double m_R0;
-	double m_Cn2;
+	double m_Dispersion;//
+	double m_R0;//Fried parameter
+	double m_Cn2;//structure function coefficients of the refractive index
 
 public:
-	using CCamera::frames;
-	cv::Mat outframe;
+	using CCamera::frames;//frames buffer
+	cv::Mat outframe;// drow array
 	cv::Mat_<cv::Point> tPtr; //left top points of subapertures
 	cv::Mat Lenses;//active lenses in rastr
 	cv::Mat_<cv::Point> subMax; //maxval coords in subapertures 
@@ -89,26 +86,28 @@ public:
 	cv::Mat CTMaxDif; // coords of CoG - coords FeFrame  CoG in subs
 	cv::Mat CTMaxDifl;// -||- but only active lenses
 	/*coef. Zernike modes*/
-	cv::Mat wfCT;
+	cv::Mat Fmat; 
+	cv::Mat Fmatl; // F= AT* (AT* A) ^ (-1) matrix, calculated once during sensor initialization
+	cv::Mat FmatTT; // Zrnkcoef C= B*F where B offsets of spot coordinates
+	cv::Mat FmatTTl;
+
+	cv::Mat wfCT;// results for different fillings of the lenslet, taking into account the tip/tilt presence
 	cv::Mat wfCTTT;
 	cv::Mat wfCTl;
 	cv::Mat wfCTTTl;
 
-	cv::Mat Fmat;
-	cv::Mat Fmatl;
-	cv::Mat FmatTT;
-	cv::Mat FmatTTl;
 	/*Correlation offsets*/
     cv::Mat CTCorr;
 	cv::Mat CTCorrl;
 	cv::Mat wfCorr;
 	cv::Mat wfCorrl;
-	cv::Mat Han;
-	cv::Mat ReffKor;
+	cv::Mat Han;// Hanning window
+	cv::Mat ReffKor;// reference frame for calculating correlation
 
 	CSensor();
 	CSensor(const std::string& ini, const char* CamId);
-	void ReLoadData();
+	~CSensor() {};
+	void ReLoadData();// called when the sensor parameters are changed
 	virtual void DrowFrame(const cv::Mat& out, int left, int top, double scale) const; //Drow cam.frame with left top offsets with scale. 
 	virtual void DrowSub(const cv::Mat& out, int left, int top, double scale) const;
 	void CheckLens(const std::string& ini);// read active lenses from file & reload data as need
@@ -129,8 +128,8 @@ public:
 	virtual void SetDC(CDC* dc) {odc = dc;}//output CDC set
 	virtual void SetWfDC(CDC* dc) {wfdc = dc;}//wavefront output CDC set
 	void SaveLenses(const std::string& ini) const;//saving active lens array
-	void SetLensesMoreThanI(int in);
-	void SaveIni(const std::string& ini) const;//save sensor propeties to ini file
+	void SetLensesMoreThanI(int in); // active lenses choice by intensity
+	virtual void SaveIni(const std::string& ini) const;//save sensor propeties to ini file, boost::fsystem format of writing and reading raises questions !!!
 
 	int Get_sdx() const { return m_sdx; }//getter
 	int Get_sdy() const { return m_sdy; }//getter
@@ -186,7 +185,10 @@ public:
 	std::deque <double> SpecY;// dx spectrum
 
 	void CTDeqAdd();//add mesuared vals in deques
-	void GetStatCTDeq();//get statistic in CT deq
+
+	void GetStatDeq(std::deque<double>& deq, double& maxin, double& averin);//calc max & abs(mean) val in deq
+	void GetStatCTDeq();//get statistic in CTdecX,CTdecY res in Point2d
+
 	void Spectrum(int N, double f0, double fen, double fd, std::deque<double>& CT, std::deque<double>& SP);// calculate spectrum
 	void DrowSpectrum(int N, int x, int y, double scl1, int fd, std::deque<double>& SP);//drow spectrum
 
@@ -195,15 +197,10 @@ public:
 	/*Cn2*/
 	std::deque <double> CTDiffX;// diffs between m_sub & m_subtresh
 	std::deque <double> CTDiffY;// diffs between m_sub & m_subtresh
-	std::deque <double> AngelAlfaX;// angels dx : focus 
-	std::deque <double> AngelAlfaY;// angels dy : focus 
 
 	void CSensor::GetR0(std::deque<double>& diff);//  calculate Freed parameter
 
 	double Get_Dispersion() const { return m_Dispersion; }//getter
 	double Get_R0() const { return m_R0; }//getter
 	double Get_Cn2() const { return m_Cn2; }//getter
-
-	void GetStatDeq(std::deque<double>& deq, double& maxin, double& averin);//calc max & aver val in deq
-
 };

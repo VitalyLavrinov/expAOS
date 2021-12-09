@@ -48,6 +48,21 @@
     <ClInclude Include="CWFSPROP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WFCinterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CWFSControler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VmbCommonTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VimbaC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CVLT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="expAOS.cpp">
@@ -72,6 +87,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CWFSPROP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CWFSControler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CVLT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -20,8 +20,10 @@
 
 std::string WFSini = "defaultWFS.ini"; // change to const later
 std::string Lensini = "strlenses.ini";
-CSensor pWFS(WFSini, "DEV_1AB228000271");
+std::string Fodir = "FO";
+CWFSControler pWFS(WFSini, "DEV_1AB228000271");
 
+CVLT pVLT;//Voltage window
 CCT pCT; //CT write window
 CZRNK pZRNK;  //Zernike write & wavefront drow window
 std::vector<CButton*> pButton;//active lenses checkbuttons
@@ -52,16 +54,16 @@ BEGIN_MESSAGE_MAP(CexpAOSDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BtnCnnctWFS2, &CexpAOSDlg::OnBnClickedBtncnnctwfs2)
 	ON_BN_CLICKED(IDC_BtnSetLMore, &CexpAOSDlg::OnBnClickedBtnsetlmore)
 	ON_BN_CLICKED(IDC_BtnGrab, &CexpAOSDlg::OnBnClickedBtngrab)
+	ON_BN_CLICKED(IDC_BtnWFSMirrConnect, &CexpAOSDlg::OnBnClickedBtnwfsmirrconnect)
+	ON_BN_CLICKED(IDC_BtnWFSMirrShowGUI, &CexpAOSDlg::OnBnClickedBtnwfsmirrshowgui)
 END_MESSAGE_MAP()
 
-
-
-void CexpAOSDlg::ShowFrameDataWfs(cv::Mat &out) {
+void CexpAOSDlg::ShowFrameDataWfs(cv::Mat& out) {
 
 	pWFS.DrowFrame(out, 5, 5, 0.5);
-	pWFS.DrowSub(out,out.cols/2+20,5,4.0);
+	//pWFS.DrowSub(out, out.cols / 2 + 20, 5, 4.0);
 	pWFS.GetCTOffsetsWfs(out);
-	ShowCT();
+	//ShowCT();
 
 	//pWFS.GetCTWfsCorr(out);
 
@@ -75,7 +77,68 @@ void CexpAOSDlg::ShowFrameDataWfs(cv::Mat &out) {
 	//ShowCorr();
 
 	ShowZRNK();
-    /*
+
+	//pWFS.GetWF(pWFS.wfCT, 0, 0);
+	//pWFS.DrowPhase(460, 30, 1.0, 0);
+	//pWFS.DrowPhase(460, pWFS.Get_ngrid() + 40, 1.0, 1);
+	//pWFS.GetWF(pWFS.wfCT, 2, 0);
+	//pWFS.DrowPhase(460 + pWFS.Get_ngrid() + 10, 30, 1.0, 0);
+	//pWFS.DrowPhase(460 + pWFS.Get_ngrid() + 10, pWFS.Get_ngrid() + 40, 1.0, 1);
+	//pWFS.GetWF(pWFS.wfCTTT, 0, 2);
+	//pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, 30, 1.0, 0);
+	//pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, pWFS.Get_ngrid() + 40, 1.0, 1);
+	/*
+	pWFS.GetWF(pWFS.wfCorr, 0, 0);
+	pWFS.DrowPhase(460 + 3 * pWFS.Get_ngrid() + 30, 30, 1.0, 0);
+	pWFS.DrowPhase(460 + 3 * pWFS.Get_ngrid() + 30, pWFS.Get_ngrid() + 40, 1.0, 1);
+	pWFS.GetWF(pWFS.wfCorr, 2, 0);
+	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, 30, 1.0, 0);
+	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, pWFS.Get_ngrid() + 40, 1.0, 1);
+	*/
+	pWFS.GetWF(pWFS.wfCTl, 0, 0);
+	pWFS.DrowPhase(460, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
+	pWFS.DrowPhase(460, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
+	//pWFS.GetWF(pWFS.wfCTl, 2, 0);
+	//pWFS.DrowPhase(460 + pWFS.Get_ngrid() + 10, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
+	//pWFS.DrowPhase(460 + pWFS.Get_ngrid() + 10, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
+	//pWFS.GetWF(pWFS.wfCTTTl, 0, 2);
+	//pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
+	//pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
+
+	/*
+	pWFS.GetWF(pWFS.wfCorrl, 0, 0);
+	pWFS.DrowPhase(460 + 3 * pWFS.Get_ngrid() + 30, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
+	pWFS.DrowPhase(460 + 3 * pWFS.Get_ngrid() + 30, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
+	pWFS.GetWF(pWFS.wfCorrl, 2, 0);
+	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
+	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
+	*/
+	pWFS.Get_WFSMirrU(pWFS.rfPLAll, pWFS.wfCTl, pWFS.UMirrAll);
+	ShowVLT();
+
+}
+
+
+void CexpAOSDlg::ShowFrameDataWfsOne(cv::Mat &out) {
+
+	pWFS.DrowFrame(out, 5, 5, 0.5);
+	pWFS.DrowSub(out,out.cols/2+20,5,4.0);
+	pWFS.GetCTOffsetsWfs(out);
+	ShowCT();
+
+	pWFS.GetCTWfsCorr(out);
+
+	pWFS.wfCT = pWFS.Get_Zrnk(pWFS.CTMaxDif, pWFS.Fmat);
+	pWFS.wfCTl = pWFS.Get_Zrnk(pWFS.CTMaxDifl, pWFS.Fmatl);
+	pWFS.wfCTTT = pWFS.Get_Zrnk(pWFS.CTMaxDif, pWFS.FmatTT);
+	pWFS.wfCTTTl = pWFS.Get_Zrnk(pWFS.CTMaxDifl, pWFS.FmatTTl);
+
+	pWFS.wfCorr = pWFS.Get_Zrnk(pWFS.CTCorr, pWFS.Fmat);
+	pWFS.wfCorrl = pWFS.Get_Zrnk(pWFS.CTCorrl, pWFS.Fmatl);
+	ShowCorr();
+
+	ShowZRNK();
+   
 	pWFS.GetWF(pWFS.wfCT, 0, 0);
 	pWFS.DrowPhase(460, 30, 1.0, 0);
 	pWFS.DrowPhase(460, pWFS.Get_ngrid() + 40, 1.0, 1);
@@ -85,32 +148,37 @@ void CexpAOSDlg::ShowFrameDataWfs(cv::Mat &out) {
 	pWFS.GetWF(pWFS.wfCTTT, 0, 2);
 	pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, 30, 1.0, 0);
 	pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, pWFS.Get_ngrid() + 40, 1.0, 1);
-
+	
 	pWFS.GetWF(pWFS.wfCorr, 0, 0);
 	pWFS.DrowPhase(460 + 3 * pWFS.Get_ngrid() + 30, 30, 1.0, 0);
 	pWFS.DrowPhase(460 + 3 * pWFS.Get_ngrid() + 30, pWFS.Get_ngrid() + 40, 1.0, 1);
 	pWFS.GetWF(pWFS.wfCorr, 2, 0);
 	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, 30, 1.0, 0);
 	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, pWFS.Get_ngrid() + 40, 1.0, 1);
-	*/
-//	pWFS.GetWF(pWFS.wfCTl, 0, 0);
-//	pWFS.DrowPhase(460, 2*pWFS.Get_ngrid()+ 80, 1.0, 0);
-//	pWFS.DrowPhase(460, 3*pWFS.Get_ngrid() + 90, 1.0, 1);
+	
+	pWFS.GetWF(pWFS.wfCTl, 0, 0);
+	pWFS.DrowPhase(460, 2*pWFS.Get_ngrid()+ 80, 1.0, 0);
+	pWFS.DrowPhase(460, 3*pWFS.Get_ngrid() + 90, 1.0, 1);
 	pWFS.GetWF(pWFS.wfCTl, 2, 0);
 	pWFS.DrowPhase(460 + pWFS.Get_ngrid() + 10, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
 	pWFS.DrowPhase(460 + pWFS.Get_ngrid() + 10, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
-	//pWFS.GetWF(pWFS.wfCTTTl, 0, 2);
-	//pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
-	//pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
-	/*
+	pWFS.GetWF(pWFS.wfCTTTl, 0, 2);
+	pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
+	pWFS.DrowPhase(460 + 2 * pWFS.Get_ngrid() + 20, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
+
+	
 	pWFS.GetWF(pWFS.wfCorrl, 0, 0);
 	pWFS.DrowPhase(460 + 3 * pWFS.Get_ngrid() + 30, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
 	pWFS.DrowPhase(460 + 3 * pWFS.Get_ngrid() + 30, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
 	pWFS.GetWF(pWFS.wfCorrl, 2, 0);
 	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, 2 * pWFS.Get_ngrid() + 80, 1.0, 0);
 	pWFS.DrowPhase(460 + 4 * pWFS.Get_ngrid() + 40, 3 * pWFS.Get_ngrid() + 90, 1.0, 1);
-	*/
+	
+	pWFS.Get_WFSMirrU(pWFS.rfPLAll,pWFS.wfCTl, pWFS.UMirrAll);
+	ShowVLT();
+
 }
+
 
 // CexpAOSDlg message handlers
 void CexpAOSDlg::IniCT() {
@@ -219,13 +287,11 @@ void CexpAOSDlg::ShowCorr()
 	int n = 0;
 	for (int j = 0; j < pWFS.Get_srastr(); j++)
 		for (int i = 0; i < pWFS.Get_srastr(); i++) {
-			//if (pWFS.Lenses.at<int>(n) != 0) {
 			str.Format("%3.2f", pWFS.CTCorr.at<double>(k));
 			pCT.m_CT.SetItemText(n, 8, str);
 			str.Format("%3.2f", pWFS.CTCorr.at<double>(k + 1));
 			pCT.m_CT.SetItemText(n, 9, str);
 			k += 2;
-			//}
 			n++;
 		}
 }
@@ -288,6 +354,38 @@ void CexpAOSDlg::IniLensButt() {
 		pButton.push_back(pButt);
 	}
 }
+// CexpAOSDlg message handlers
+void CexpAOSDlg::IniVLT() {
+	pVLT.m_VLTS.DeleteAllItems();
+	pVLT.m_VLTS.InsertColumn(0, "¹", LVCFMT_LEFT, 40);
+	pVLT.m_VLTS.InsertColumn(1, "U", LVCFMT_LEFT, 70);
+
+	DWORD ExStyle = pVLT.m_VLTS.GetExtendedStyle();
+	ExStyle |= LVS_EX_FULLROWSELECT;
+	ExStyle |= LVS_EX_GRIDLINES;
+	pVLT.m_VLTS.SetExtendedStyle(ExStyle);
+	CString estr;
+	for (int i = 0; i < pWFS.Get_WFSMirrnact(); i++) {
+		estr.Format("%u", i + 1);
+		pVLT.m_VLTS.InsertItem(i, estr);
+		pVLT.m_VLTS.SetItemText(i, 1, "-");
+	}
+}
+void CexpAOSDlg::ShowVLT() {
+	CString str;
+	int n = 0;
+	for (int i = 0; i < pWFS.Get_WFSMirrnact(); i++) {
+		str.Format("%u", i + 1);
+		pVLT.m_VLTS.SetItemText(i, 0, str);
+
+		if (pWFS.actarray.at<UINT8>(i) == 1) str.Format("%3.2f", pWFS.UMirrAll.at<double>(i));
+		else str = "0.0";
+		pVLT.m_VLTS.SetItemText(i, 1, str);
+
+
+	}
+}
+
 
 void CexpAOSDlg::ShowZRNK() {
 	CString str;
@@ -296,26 +394,26 @@ void CexpAOSDlg::ShowZRNK() {
 		str.Format("%u", i + 1);
 		pZRNK.m_ZRNK.SetItemText(i, 0, str);
 
-		//str.Format("%3.2f", pWFS.wfCT.at<double>(i));
-		//pZRNK.m_ZRNK.SetItemText(i, 1, str);
+		str.Format("%3.2f", pWFS.wfCT.at<double>(i));
+		pZRNK.m_ZRNK.SetItemText(i, 1, str);
 
 		str.Format("%3.2f", pWFS.wfCTl.at<double>(i));
 		pZRNK.m_ZRNK.SetItemText(i, 2, str);
 
-		//if (i > 1)str.Format("%3.2f", pWFS.wfCTTT.at<double>(i - 2));
-		//else str = "_";
-		//pZRNK.m_ZRNK.SetItemText(i, 3, str);
+		if (i > 1)str.Format("%3.2f", pWFS.wfCTTT.at<double>(i - 2));
+		else str = "_";
+		pZRNK.m_ZRNK.SetItemText(i, 3, str);
 
-		//if (i > 1)str.Format("%3.2f", pWFS.wfCTTTl.at<double>(i - 2));
-		//else str = "_";
-		//pZRNK.m_ZRNK.SetItemText(i, 4, str);
+		if (i > 1)str.Format("%3.2f", pWFS.wfCTTTl.at<double>(i - 2));
+		else str = "_";
+		pZRNK.m_ZRNK.SetItemText(i, 4, str);
+		
+		str.Format("%3.2f", pWFS.wfCorr.at<double>(i));
+		pZRNK.m_ZRNK.SetItemText(i, 5, str);
 
-		//str.Format("%3.2f", pWFS.wfCorr.at<double>(i));
-		//pZRNK.m_ZRNK.SetItemText(i, 5, str);
-
-		//str.Format("%3.2f", pWFS.wfCorrl.at<double>(i));
-		//pZRNK.m_ZRNK.SetItemText(i, 6, str);
-
+		str.Format("%3.2f", pWFS.wfCorrl.at<double>(i));
+		pZRNK.m_ZRNK.SetItemText(i, 6, str);
+		
 	}
 }
 
@@ -330,14 +428,19 @@ BOOL CexpAOSDlg::OnInitDialog()
 
 	pWFS.CheckLens(Lensini);
 
+	SetDlgItemInt(IDC_SNFO, pWFS.WFSMirrLoadFO(Fodir));
+
 	pCT.Create(IDD_CT, this);
 	pCT.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOSIZE);
+	pVLT.Create(IDD_DVLT, this);
+	pVLT.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOSIZE);
 	pZRNK.Create(IDD_ZRNK, this);
 	pZRNK.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOSIZE);
 
 	pWFS.SetDC(this->GetDC());
 	pWFS.SetWfDC(pZRNK.GetDC());
 	IniCT();
+	IniVLT();
 	IniZRNK();
 	IniLensButt();
 
@@ -390,9 +493,10 @@ void CexpAOSDlg::OnBnClickedBtnonewfs()
 		if (!pWFS.m_FSTART) {
 			pCT.ShowWindow(SW_SHOW);
 			pZRNK.ShowWindow(SW_SHOW);
+			pVLT.ShowWindow(SW_SHOW);
 			if (pWFS.CameraFrame()) {
 			//	pWFS.outframe = pWFS.GetFrameMat();
-				ShowFrameDataWfs(pWFS.GetFrameMat());
+				ShowFrameDataWfsOne(pWFS.GetFrameMat());
 			}
 		}
 		else SetDlgItemText(IDC_SSTSWFS, "Cam already runing");
@@ -705,4 +809,24 @@ UINT ThreadGrabWFS(LPVOID pParam)
 	pWFS.m_FSTART = 0;
 	SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 	return 0;
+}
+
+void CexpAOSDlg::OnBnClickedBtnwfsmirrconnect()
+{
+	pWFS.WFSMirrConnect();
+}
+
+
+void CexpAOSDlg::OnBnClickedBtnwfsmirrshowgui()
+{
+	pWFS.WFSMirrShowGUI();
+}
+
+
+BOOL CexpAOSDlg::DestroyWindow()
+{
+	
+	pWFS.~CWFSControler();
+
+	return CDialogEx::DestroyWindow();
 }

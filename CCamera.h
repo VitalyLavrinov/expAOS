@@ -8,9 +8,13 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
-//#include <boost/filesystem/fstream.hpp> // linking error
+//#include <boost/filesystem/fstream.hpp> // linking error !!!
+#include <numeric>
+
 
 #include "VimbaC.h"  
+
+bool fileExists(const std::string& filename);//Check if a file exists
 
 //namespace fs = boost::filesystem;
 namespace pt = boost::property_tree;
@@ -54,13 +58,13 @@ constexpr int FRAME_COUNT(3); //cnt frames to asynchronous input
             int m_fcnt; //framecounter to get fps
             int m_cnt4fps; //sample length to get fps
 
-            std::deque<cv::Mat> framesBuf;
+            std::deque<cv::Mat> framesBuf;// buffer to grab film
 
            public:
             bool m_FSTART;
             CCamera();
             CCamera(const std::string &ini, const char* CamId);
-            ~CCamera();
+            ~CCamera() { m_FSTART = 0; CameraClose();/* VmbShutdown();*/ }
             bool CameraConnect(); //Connect Camera by id;
             void CameraClose();// camera kill
             int GetCamExpos();//get expos from camera
@@ -76,6 +80,7 @@ constexpr int FRAME_COUNT(3); //cnt frames to asynchronous input
             cv::Mat GetFrameMat() const;//Get frame like CvMat
             cv::Mat GetFrameMat(int i) const; //Get frame like CvMat from array frames[] when asynchronous input 
 
+            /*fps calculator*/
             void setzerotime() { m_beg = clock_t::now(); }
             void fps() { m_fps = m_fcnt / std::chrono::duration_cast<second_t>(clock_t::now() - m_beg).count(); }
             double elapsedtime() const { return std::chrono::duration_cast<second_t>(clock_t::now() - m_beg).count();}

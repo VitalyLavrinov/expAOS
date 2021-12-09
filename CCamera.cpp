@@ -75,11 +75,6 @@
             outdc = odc;
         }
 
-        CCamera:: ~CCamera() {
-            CameraClose();
-            VmbShutdown();
-        }
-
         //Get frame like CvMat
         cv::Mat CCamera::GetFrameMat() const {
             cv::Mat out;
@@ -286,3 +281,13 @@
             err = VmbCameraClose(cameraHandle);
         }         
 
+        //Check if a file exists
+        bool fileExists(const std::string& filename)
+        {
+            struct stat buf;
+            if (stat(filename.c_str(), &buf) != -1)
+            {
+                return true;
+            }
+            return false;
+        }

@@ -7,6 +7,7 @@
 #define IDD_CT                          130
 #define IDD_ZRNK                        132
 #define IDD_DWFSPROP                    134
+#define IDD_DVLT                        136
 #define IDC_BtnCnnctWFS                 1000
 #define IDC_BtnWfsProp                  1000
 #define IDC_BtnStartWFS                 1001
@@ -40,6 +41,7 @@
 #define IDC_ENORM                       1017
 #define IDC_SSUB                        1017
 #define IDC_BtnGrab                     1018
+#define IDC_LIST1                       1018
 #define IDC_SMINX                       1019
 #define IDC_ESUB                        1020
 #define IDC_CNTGRAB                     1020
@@ -75,19 +77,22 @@
 #define IDC_SCNY                        1038
 #define IDC_SS9                         1039
 #define IDC_SR0X                        1040
-#define IDC_SAVERY2                     1041
 #define IDC_SR0Y                        1041
 #define IDC_SS10                        1042
 #define IDC_SS11                        1043
 #define IDC_SS12                        1044
+#define IDC_BtnWFSMirrConnect           1045
+#define IDC_BtnWFSMirrShowGUI           1046
+#define IDC_SNFO                        1047
+#define IDC_SS13                        1048
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        136
+#define _APS_NEXT_RESOURCE_VALUE        138
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1018
+#define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
