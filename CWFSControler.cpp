@@ -28,6 +28,48 @@ void CWFSControler::LoadMirrIni(const std::string& ini) {
 	m_u0= std::stod(bar.get<std::string>("Controler.u0"));
 }
 
+void CWFSControler::SaveMirrIni(const std::string& ini) {
+	pt::ptree bar;
+	bar.put("General.offsetx", GetOffsetx());
+	bar.put("General.offsety", GetOffsety());
+	bar.put("General.cdx", Get_cdx());
+	bar.put("General.cdy", Get_cdy());
+	bar.put("General.sdx", Get_sdx());
+	bar.put("General.sdy", Get_sdy());
+	bar.put("General.srastr", Get_srastr());
+	bar.put("General.swnd", Get_swnd());
+	bar.put("General.top", Get_top());
+	bar.put("General.left", Get_left());
+	bar.put("General.shftcol", Get_shftcol());
+	bar.put("General.shftrow", Get_shftrow());
+	bar.put("General.norm", Get_norm());
+	bar.put("General.sub", Get_sub());
+	bar.put("General.treshlow", Get_treshlow());
+	bar.put("General.treshhigh", Get_treshhigh());
+	bar.put("General.subtrah", Get_subtrah());
+	bar.put("General.expos", GetExpos());
+
+	bar.put("System.szelens", Get_szelens());
+	bar.put("System.pixsze", Get_pixsze());
+	bar.put("System.lwave", Get_lwave());
+	bar.put("System.focuscam", Get_focuscam());
+	bar.put("System.lpath", Get_lpath());
+	bar.put("System.ngrid", Get_ngrid());
+	bar.put("System.npzrnk", Get_npzrnk());
+
+	bar.put("Statistics.entrancediameter", Get_entrancediameter());
+	bar.put("Statistics.distbetsub", Get_distbetsub());
+	bar.put("Statistics.r0k1", Get_r0k1());
+	bar.put("Statistics.r0k2", Get_r0k2());
+	bar.put("Statistics.r0k3x", Get_r0k3x());
+	bar.put("Statistics.r0k3y", Get_r0k3y());
+	bar.put("Statistics.cn2k1", Get_cn2k1());
+
+	bar.put("Controler.coef", m_coef);
+	bar.put("Controler.u0", m_u0);
+	pt::write_ini(ini, bar);
+}
+
 static int LoadMirrorDLL(LPCSTR dllname, HMODULE& h, WFC_INTERFACE* bi)// loaded from VISIONICA example
 {
 	int Ver;
@@ -104,6 +146,23 @@ void CWFSControler::WFSMirrPowerDown() {
 	}
 }
 
+
+void CWFSControler::WFSMirrSetUGroupClose(cv::Mat& D)
+{
+	UApplied = Uregister + ( D * m_coef);
+	UApplied.copyTo(Uregister);
+	int actid = 0;
+	for (int i = 1; i <= m_nact; i++) {
+		if (actarray.at<UINT8>(i - 1) == 1) {
+			m_WFCI.MirrorSetGroupVoltage(i * -1, UApplied.at<double>(actid), false); //if -i then voltage  written to the mirror memory only
+			actid++;
+		}
+		else m_WFCI.MirrorSetGroupVoltage(i * -1, 0.0, false);
+	}
+	//if (m_HVon) 
+	m_WFCI.MirrorSetGroupVoltage(0, 0., true);//apply voltages all at once
+}
+
 //set voltages on mirror all at once
 void CWFSControler::WFSMirrSetUGroup(cv::Mat& D)
 {
@@ -137,7 +196,7 @@ void CWFSControler::WFSMirrSetActU(int id, double val)
 //calculate mirror electrode voltages from frame zrnk coef.
 void CWFSControler::Get_WFSMirrU(cv::Mat& F, cv::Mat& frameplnms, cv::Mat& U) {
 	U =frameplnms*F;
-	U = U * m_u0;
+	U = U * m_u0 * -1; // opposite mirror surface -1
 }
 //prepare F matrix, F=AT*(AT*A)^(-1)
 void CWFSControler :: Pre_WFSMirrPlnm(cv::Mat& FO, cv::Mat& rf){
@@ -161,7 +220,9 @@ void CWFSControler :: Pre_WFSMirrPlnm(cv::Mat& FO, cv::Mat& rf){
 int CWFSControler::WFSMirrCheckFO(std::string& dirname) {
 	std::string strf;
 
+
 	UApplied = cv::Mat::zeros(1, m_nact, CV_64FC1);
+	Uregister = cv::Mat::zeros(1, m_nact, CV_64FC1);
 	actarray = cv::Mat::zeros(1, m_nact, CV_8UC1);
 
 	m_nactiveact = 0;
@@ -176,10 +237,10 @@ int CWFSControler::WFSMirrCheckFO(std::string& dirname) {
 	if (m_nactiveact == 0)m_nactiveact = 1;
 
 	FOMirrAll = cv::Mat::zeros(m_nactiveact, Get_npzrnk(), CV_64FC1);
-	//FOMirr = cv::Mat::zeros(m_nactiveact, Get_npzrnk() - 2, CV_64FC1);
+	FOMirr = cv::Mat::zeros(m_nactiveact, Get_npzrnk() - 2, CV_64FC1);
 	UMirrAll = cv::Mat::zeros(1, m_nactiveact, CV_64FC1);
 
-	//rfPL = cv::Mat::zeros(Get_npzrnk() - 2, m_nactiveact, CV_64FC1);
+	rfPL = cv::Mat::zeros(Get_npzrnk() - 2, m_nactiveact, CV_64FC1);
 	rfPLAll = cv::Mat::zeros(Get_npzrnk(), m_nactiveact, CV_64FC1);
 	return m_nactiveact;
 }
@@ -201,7 +262,7 @@ int CWFSControler::WFSMirrLoadFO(std::string& dirname) {
 				for (int i = 0; i < Get_npzrnk(); i++) {
 					in >> tmp;
 					FOMirrAll.at<double>(actid, i) = tmp;
-					//if (i > 1)FOMirr.at<double>(actid, i - 2) = tmp;
+					if (i > 1)FOMirr.at<double>(actid, i - 2) = tmp;
 				}
 				in.close();
 				actid++;
@@ -210,6 +271,6 @@ int CWFSControler::WFSMirrLoadFO(std::string& dirname) {
 	}
 
 	Pre_WFSMirrPlnm(FOMirrAll, rfPLAll);
-	//Pre_WFSMirrPlnm(FOMirr, rfPL);
+	Pre_WFSMirrPlnm(FOMirr, rfPL);
 	return res;
 }

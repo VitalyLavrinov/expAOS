@@ -191,6 +191,7 @@
     <ClInclude Include="CCamera.h" />
     <ClInclude Include="CCT.h" />
     <ClInclude Include="CSensor.h" />
+    <ClInclude Include="CSTAT.h" />
     <ClInclude Include="CVLT.h" />
     <ClInclude Include="CWFSControler.h" />
     <ClInclude Include="CWFSPROP.h" />
@@ -209,6 +210,7 @@
     <ClCompile Include="CCamera.cpp" />
     <ClCompile Include="CCT.cpp" />
     <ClCompile Include="CSensor.cpp" />
+    <ClCompile Include="CSTAT.cpp" />
     <ClCompile Include="CVLT.cpp" />
     <ClCompile Include="CWFSControler.cpp" />
     <ClCompile Include="CWFSPROP.cpp" />

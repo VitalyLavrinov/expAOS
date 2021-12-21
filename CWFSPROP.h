@@ -43,5 +43,8 @@ public:
 	CString m_FOCUSCAM;
 	CString m_LPATH;
 	CString m_COEFSHIFT;
+	CString m_SUBTRAH;
 
+	CString m_ENTRANCESUB;
+	CString m_DISTBET;
 };

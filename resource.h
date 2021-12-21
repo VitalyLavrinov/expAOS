@@ -8,6 +8,7 @@
 #define IDD_ZRNK                        132
 #define IDD_DWFSPROP                    134
 #define IDD_DVLT                        136
+#define IDD_DSTAT                       138
 #define IDC_BtnCnnctWFS                 1000
 #define IDC_BtnWfsProp                  1000
 #define IDC_BtnStartWFS                 1001
@@ -45,9 +46,11 @@
 #define IDC_SMINX                       1019
 #define IDC_ESUB                        1020
 #define IDC_CNTGRAB                     1020
+#define IDC_SCARX                       1020
 #define IDC_ENGRID                      1021
 #define IDC_SMINY                       1021
 #define IDC_SS2                         1022
+#define IDC_ESUBTRUH                    1022
 #define IDC_SMAXX                       1023
 #define IDC_SMAXY                       1024
 #define IDC_SS3                         1025
@@ -68,43 +71,75 @@
 #define IDC_SDISPY                      1033
 #define IDC_ELWAVE                      1034
 #define IDC_ESCL                        1034
+#define IDC_SCARY                       1034
 #define IDC_EFOCUSCAM                   1035
 #define IDC_SS8                         1035
+#define IDC_SDISPSUBX                   1035
 #define IDC_ELPATH                      1036
 #define IDC_SS7                         1036
+#define IDC_EFON                        1036
 #define IDC_ECOEFSHIFT                  1037
 #define IDC_SCNX                        1037
 #define IDC_SCNY                        1038
+#define IDC_ENTRANCESUB                 1038
 #define IDC_SS9                         1039
+#define IDC_EPIXSZE2                    1039
+#define IDC_EDISTBET                    1039
 #define IDC_SR0X                        1040
 #define IDC_SR0Y                        1041
 #define IDC_SS10                        1042
 #define IDC_SS11                        1043
 #define IDC_SS12                        1044
 #define IDC_BtnWFSMirrConnect           1045
+#define IDC_SS18                        1045
 #define IDC_BtnWFSMirrShowGUI           1046
+#define IDC_SS20                        1046
 #define IDC_SNFO                        1047
+#define IDC_SS19                        1047
 #define IDC_SS13                        1048
+#define IDC_SDISPSUBY                   1048
+#define IDC_BtnCloseLoopWFS             1049
+#define IDC_SSUBDIF                     1049
 #define IDC_SS14                        1050
 #define IDC_BSAVEZRNK                   1051
+#define IDC_SS21                        1051
 #define IDC_BGRABFO                     1052
+#define IDC_SCNSUBX                     1052
 #define IDC_EELK                        1053
+#define IDC_SCNSUBY                     1053
 #define IDC_SU0                         1054
+#define IDC_SRSUBX                      1054
 #define IDC_SS15                        1055
+#define IDC_SRSUBY                      1055
 #define IDC_SS16                        1056
+#define IDC_SK1                         1056
 #define IDC_BGRABFO2                    1057
 #define IDC_BSETVLTTOE                  1057
+#define IDC_SS22                        1057
 #define IDC_ECOEF                       1058
+#define IDC_SK2                         1058
 #define IDC_EVLTG                       1059
+#define IDC_SS23                        1059
 #define IDC_SS17                        1060
+#define IDC_SK3X                        1060
+#define IDC_BSTATWFS                    1061
+#define IDC_SS24                        1061
+#define IDC_BFONEXT                     1062
+#define IDC_SK3Y                        1062
+#define IDC_BFOPREV                     1063
+#define IDC_SS25                        1063
+#define IDC_SC1                         1064
+#define IDC_SS26                        1065
+#define IDC_SC2                         1066
+#define IDC_SC055                       1067
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        138
+#define _APS_NEXT_RESOURCE_VALUE        140
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1019
+#define _APS_NEXT_CONTROL_VALUE         1050
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

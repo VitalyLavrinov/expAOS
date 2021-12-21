@@ -8,11 +8,15 @@
 #include "CZRNK.h"
 #include "CWFSPROP.h"
 #include "CVLT.h"
+#include "CSTAT.h"
 
 UINT ThreadDrowWFS(LPVOID pParam);// wavefront sensor
-UINT ThreadGrabWFS(LPVOID pParam);// grab *flm from wavefront sensor
-UINT ThreadDrowWFSLoop(LPVOID pParam);//close loop
-UINT ThreadGrabFO(LPVOID pParam);// get response function from mirror
+UINT ThreadGrabWFS(LPVOID pParam);//WFS grab *flm from wavefront sensor
+UINT ThreadDrowWFSLoop(LPVOID pParam);//WFS open loop
+UINT ThreadGrabFO(LPVOID pParam);//WFS get response function from mirror
+UINT ThreadWFSCloseLoop(LPVOID pParam);//WFS closeLoop
+UINT ThreadStatWFSLoop(LPVOID pParam);
+UINT ThreadDrowSpec(LPVOID pParam);
 
 // CexpAOSDlg dialog
 class CexpAOSDlg : public CDialogEx
@@ -70,4 +74,8 @@ public:
 	afx_msg void OnBnClickedBsavezrnk();
 	afx_msg void OnBnClickedBgrabfo();
 	afx_msg void OnBnClickedBsetvlttoe();
+	afx_msg void OnBnClickedBtncloseloopwfs();
+	afx_msg void OnBnClickedBstatwfs();
+	afx_msg void OnBnClickedBfonext();
+	afx_msg void OnBnClickedBfoprev();
 };

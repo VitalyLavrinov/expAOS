@@ -107,12 +107,12 @@
        
         //Get Cam prop from inifile
         void CCamera::GetCamIni(const std::string& ini) {
-            pt::ptree bar;
+           pt::ptree bar;
             pt::ini_parser::read_ini(ini, bar);
-            width = std::stoi(bar.get<std::string>("General.cdx"));
-            height = std::stoi(bar.get<std::string>("General.cdy"));
             offsetx = std::stoi(bar.get<std::string>("General.offsetx"));
             offsety = std::stoi(bar.get<std::string>("General.offsety"));
+            width = std::stoi(bar.get<std::string>("General.cdx"));
+            height = std::stoi(bar.get<std::string>("General.cdy"));
             expos = std::stoi(bar.get<std::string>("General.expos"));
         }
       

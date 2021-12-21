@@ -7,34 +7,43 @@
 CSensor::CSensor() : CCamera() {
 	LoadIni("default.ini");
 
-	m_treshlow = 7; // can be changed in Sensor Properties window
-	m_treshhigh=255; // can be changed in Sensor Properties window
 	m_Speccnt = 500; //!! change to cntframes in work with model films
 	m_idframe = 0;
-
-	m_subtrah=8;
-	m_R0k1=0.90135;
-	m_R0k2=1.46/ (1.692 * PI * PI);
-	m_R0k3=0.097;
-	m_Cn2k1 = 1.69;
-	m_Cn2k2 = 0.423;
 	ReLoadData();
 }
 CSensor::CSensor(const std::string& ini, const char* CamId) : CCamera(ini,CamId) {
 	LoadIni(ini);
-	
-	m_treshlow = 7;// can be changed in Sensor Properties window
-	m_treshhigh = 255; // can be changed in Sensor Properties window
 	m_Speccnt = 1000; //!! because max Cam fps in our system 1000
 	m_idframe = 0;
-
-	m_subtrah=71;
-	m_R0k1 = 0.90135;
-	m_R0k2 = 1.46 / (1.692 * PI * PI);
-	m_R0k3 = 0.097;
-	m_Cn2k1 = 1.69;
-	m_Cn2k2 = 0.423;
+	TurbConstInit();
 	ReLoadData();
+}
+
+//change or init all grids, arrays after reloading sensor parameters 
+void CSensor::TurbConstInit() {
+	//CONSTANT FROM INI file to r0=r0K1*lwave^6/5 *(  [r0K2*D^-1/3 - r0K3(xy)*d^-1/3] / DISP )^3/5
+	// cn2=DISP/ (С1*L*[r0K2*D^-1/3 - r0K3(xy)*d^-1/3])
+
+	m_statx.m_R0k1 = m_r0k1;//0.592*pow(2, 6.0/5.0);// 0.592*2.29739671
+	m_statx.m_R0k2= m_r0k2;
+	m_statx.m_R0k3 = m_r0k3x;
+	m_statx.m_Cn2k1 = m_cn2k1;//1.411 * PI * PI;
+
+	m_staty.m_R0k1 = m_r0k1;
+	m_staty.m_R0k2 = m_r0k2;
+	m_staty.m_R0k3 = m_r0k3y;
+	m_staty.m_Cn2k1 = m_cn2k1;
+
+	m_statonex.m_R0k1 = m_r0k1;
+	m_statonex.m_R0k2 = m_r0k2;
+	m_statonex.m_R0k3 = 0.0;
+	m_statonex.m_Cn2k1 = m_cn2k1/2;
+
+	m_statoney.m_R0k1 = m_r0k1;
+	m_statoney.m_R0k2 = m_r0k2;
+	m_statoney.m_R0k3 = 0.0;
+	m_statoney.m_Cn2k1 = m_cn2k1/2;
+	
 }
 
 //change or init all grids, arrays after reloading sensor parameters 
@@ -80,6 +89,7 @@ void CSensor::ReLoadData() {
     CTMaxDif = cv::Mat::zeros(1, m_srastr * m_srastr * 2, CV_64FC1);
  	wfCT = cv::Mat::zeros(1, m_npzrnk, CV_64FC1);
 	wfCTl = cv::Mat::zeros(1, m_npzrnk, CV_64FC1);
+	wfCTtmpl = cv::Mat::zeros(1, m_npzrnk-2, CV_64FC1);
     wfCTTT = cv::Mat::zeros(1, m_npzrnk-2 , CV_64FC1);
     wfCTTTl = cv::Mat::zeros(1, m_npzrnk - 2, CV_64FC1);
 
@@ -214,6 +224,7 @@ void CSensor::DrowPhase(int left, int top, double scale, int interfer) {
 
 //read parameters from ini file 
 void CSensor::LoadIni(const std::string& ini) {
+	
 	pt::ptree bar;
 	pt::ini_parser::read_ini(ini, bar);
 	m_cdx = std::stoi(bar.get<std::string>("General.cdx"));
@@ -222,8 +233,8 @@ void CSensor::LoadIni(const std::string& ini) {
 	m_sdy = std::stoi(bar.get<std::string>("General.sdy"));
 	m_srastr = std::stoi(bar.get<std::string>("General.srastr"));
 	m_swnd = std::stoi(bar.get<std::string>("General.swnd"));
-	m_left = std::stoi(bar.get<std::string>("General.left"));
 	m_top = std::stoi(bar.get<std::string>("General.top"));
+	m_left = std::stoi(bar.get<std::string>("General.left"));
 	m_shftcol = std::stoi(bar.get<std::string>("General.shftcol"));
 	m_shftrow = std::stoi(bar.get<std::string>("General.shftrow"));
 	m_norm = std::stoi(bar.get<std::string>("General.norm"));
@@ -235,12 +246,24 @@ void CSensor::LoadIni(const std::string& ini) {
 	m_lpath = std::stod(bar.get<std::string>("System.lpath"));
 	m_ngrid = std::stoi(bar.get<std::string>("System.ngrid"));
 	m_npzrnk = std::stoi(bar.get<std::string>("System.npzrnk"));
+	m_treshlow = std::stoi(bar.get<std::string>("General.treshlow"));
+	m_treshhigh = std::stoi(bar.get<std::string>("General.treshhigh")); 
+	m_subtrah = std::stoi(bar.get<std::string>("General.subtrah"));
+
+	
+	m_EntranceDiameter = std::stod(bar.get<std::string>("Statistics.entrancediameter"));
+	m_distbetSub = std::stod(bar.get<std::string>("Statistics.distbetsub"));
+	m_r0k1 = std::stod(bar.get<std::string>("Statistics.r0k1"));
+	m_r0k2 = std::stod(bar.get<std::string>("Statistics.r0k2"));
+	m_r0k3x = std::stod(bar.get<std::string>("Statistics.r0k3x"));
+	m_r0k3y = std::stod(bar.get<std::string>("Statistics.r0k3y"));
+	m_cn2k1 = std::stod(bar.get<std::string>("Statistics.cn2k1"));
+	
 }
 
 void CSensor::SaveIni(const std::string& ini) const {
 	pt::ptree bar;
 
-	bar.put("General.expos", GetExpos());
 	bar.put("General.offsetx", GetOffsetx());
 	bar.put("General.offsety", GetOffsety());
 	bar.put("General.cdx", m_cdx);
@@ -255,6 +278,10 @@ void CSensor::SaveIni(const std::string& ini) const {
 	bar.put("General.shftrow", m_shftrow);
 	bar.put("General.norm", m_norm);
 	bar.put("General.sub", m_sub);
+	bar.put("General.treshlow", m_treshlow);
+	bar.put("General.treshhigh", m_treshhigh);
+	bar.put("General.subtrah", m_subtrah);
+	bar.put("General.expos", GetExpos());
 
 	bar.put("System.szelens", m_szelens);
 	bar.put("System.pixsze", m_pixsze);
@@ -264,6 +291,14 @@ void CSensor::SaveIni(const std::string& ini) const {
 	bar.put("System.ngrid", m_ngrid);
 	bar.put("System.npzrnk", m_npzrnk);
 	
+	bar.put("Statistics.entrancediameter", m_EntranceDiameter);
+	bar.put("Statistics.distbetsub", m_distbetSub);
+	bar.put("Statistics.r0k1", m_r0k1);
+	bar.put("Statistics.r0k2", m_r0k2);
+	bar.put("Statistics.r0k3x", m_r0k3x);
+	bar.put("Statistics.r0k3y", m_r0k3y);
+	bar.put("Statistics.cn2k1", m_cn2k1);
+
 	pt::write_ini(ini, bar);
 }
 
@@ -274,11 +309,11 @@ void CSensor::CTDeqAdd() {
 	CTdecY.pop_front();
 	CTdecY.push_back(CTMaxDif.at<double>(m_sub));
 	CTDiffX.pop_front();
-	//CTDiffX.push_back(CTMaxDif.at<double>(m_sub - 1)-CTMaxDif.at<double>(m_subtrah - 1));
-	CTDiffX.push_back(CTMaxDif.at<double>(m_subtrah - 1));
+	CTDiffX.push_back(abs(CTMaxDif.at<double>(m_sub - 1)-CTMaxDif.at<double>(m_subtrah - 1)));
+	//CTDiffX.push_back(CTMaxDif.at<double>(m_subtrah - 1));
 	CTDiffY.pop_front();
-	//CTDiffY.push_back(CTMaxDif.at<double>(m_sub) -CTMaxDif.at<double>(m_subtrah));
-	CTDiffY.push_back(CTMaxDif.at<double>(m_subtrah));
+	CTDiffY.push_back(abs(CTMaxDif.at<double>(m_sub) - CTMaxDif.at<double>(m_subtrah)));
+	//CTDiffY.push_back(CTMaxDif.at<double>(m_subtrah));
 }
 
 //calc max & aver val in deq
@@ -339,7 +374,7 @@ void CSensor::Spectrum(int N, double f0, double fen, double fd, std::deque<doubl
 }
 
 //drow spectrum on CDC
-void CSensor::DrowSpectrum(int N, int x, int y, double scl1, int fd, std::deque<double>& SP) {
+void CSensor::DrowSpectrum(CDC* sdc, int N, int x, int y, double scl1, int fd, std::deque<double>& SP) {
 	CBitmap bmp;
 	CDC dcMem;
 	cv::Scalar yellow(0, 255, 255);
@@ -368,10 +403,10 @@ void CSensor::DrowSpectrum(int N, int x, int y, double scl1, int fd, std::deque<
 	line(drow, cv::Point(102, 250), cv::Point(102, 255), black, 1);
 	line(drow, cv::Point(77, 252), cv::Point(77, 255), black, 1);
 
-	dcMem.CreateCompatibleDC(odc);
+	dcMem.CreateCompatibleDC(sdc);
 	bmp.CreateBitmap(drow.cols, drow.rows, 1, 32, drow.data);
 	dcMem.SelectObject(&bmp);
-	odc->BitBlt(x, y, drow.cols + x, drow.rows + y, &dcMem, 0, 0, SRCCOPY);
+	sdc->BitBlt(x, y, drow.cols + x, drow.rows + y, &dcMem, 0, 0, SRCCOPY);
 	bmp.DeleteObject();
 	DeleteDC(dcMem);
 }
@@ -1132,33 +1167,46 @@ void CSensor::Pre_Zrnk(cv::Mat& r,int nlens, int cntzrnk,const cv::Mat& x,const 
 }
 
 
-
-void CSensor::GetR0 (std::deque<double>& diff) {
-	double  powdisp, powlLwave, powDa, powd,dst, powdst;
-
-	double rad = (PI / 180);
-
+double CSensor::CalcDisp(std::deque<double>& diff)
+{
+	double Disp;
 	double sum = std::accumulate(diff.begin(), diff.end(), 0.0);
 	double mean = sum / diff.size(); //or sze-1 for no biased slightly 
 	std::vector<double> diff1(diff.size());
-	std::transform(diff.begin(), diff.end(), diff1.begin(),	std::bind2nd(std::minus<double>(), mean));
+	std::transform(diff.begin(), diff.end(), diff1.begin(), std::bind2nd(std::minus<double>(), mean));
 	double sq_sum = std::inner_product(diff1.begin(), diff1.end(), diff1.begin(), 0.0);
-	
-	m_Dispersion = sq_sum / diff.size();
-	//double cnst = (m_pixsze / m_focuscam) * rad;
-	//cnst = cnst * cnst;
-	//m_Dispersion = m_Dispersion*cnst;
-
-	powdisp = pow(m_Dispersion, 3.0 / 5.0);
-	powdisp = 1 / powdisp;
-	powlLwave = pow(m_lwave, 6.0 / 5.0);
-	powDa = pow(m_EntranceDiameter, 1.0 / 3.0);
-	powDa = 1 / powDa;
-	powd = pow(m_distbetSub, 1.0 / 3.0);
-	powd = 1 / powd;
-	dst = m_R0k2 * powDa - m_R0k3 * powd;
-    powdst = pow(dst, 3.0 / 5.0);
-
-	m_R0 = powdisp * m_R0k1 * powlLwave * powdst;
-	m_Cn2 = (1 / pow((m_Cn2k1 * m_R0), 3.0 / 5.0)) / (m_Cn2k2 * (DPI / m_lwave) * (DPI / m_lwave) * m_lpath);//??
+	Disp = sq_sum / diff.size();
+	return Disp;
 }
+
+void CSensor::CalcR0 (std::deque<double>& diff, turbstat& stat,double Disp) {
+	//double  powdisp, powlLwave, powDa, powd,dst, powdst;
+	double cnst;
+	double rad = (PI / 180);
+	stat.m_Dispersion = Disp;
+	
+	cnst = (m_pixsze / m_focuscam) *rad;
+	cnst = cnst * cnst;
+	Disp = Disp*cnst;//dispersion in radians
+
+
+	// r0=K1*lwave^6/5 *(  [K2*D^-1/3 - K3*d^-1/3] / DISP )^3/5
+
+	double powlLwave = pow(m_lwave, 6.0 / 5.0);
+
+	double powDa = pow(m_EntranceDiameter, 1.0 / 3.0);
+	powDa = 1 / powDa;
+	double powd = pow(m_distbetSub, 1.0 / 3.0);
+	powd = 1 / powd;
+	
+	double sqrbrck = stat.m_R0k2 * powDa - stat.m_R0k3 * powd;
+
+	double rndbrck = pow(sqrbrck, 3.0 / 5.0) / pow(Disp, 3.0 / 5.0);
+	//double rndbrck = pow(sqrbrck / Disp, 3.0 / 5.0);
+
+	stat.m_R0 = stat.m_R0k1 * powlLwave * rndbrck;
+
+	// cn2=DISP/ (С1*L*[K2*D^-1/3 - K3*d^-1/3])
+	stat.m_Cn2 = (Disp / (stat.m_Cn2k1 * m_lpath * sqrbrck))*10000000000000;
+}
+

@@ -22,6 +22,7 @@ private:
 
 	void LoadMirrIni(const std::string& ini);//load inival for mirror
 
+
 public:
 	CWFSControler();
 	CWFSControler(const std::string& ini, const char* CamId);
@@ -37,22 +38,27 @@ public:
 			hdll = NULL;
 		}
 	}
+	void SaveMirrIni(const std::string& ini);//save inival for mirror
 	void WFSMirrConnect();//connect mirror see const DEVN, DEVSTR for U-Flex-56-HEX-59
 	void WFSMirrShowGUI();// show GUI from mirror manufacturer
 	void WFSMirrPowerUp();// mirror power up
 	void WFSMirrPowerDown();// mirror power down
 
 	cv::Mat UApplied; //applied voltages with feedback ratio
+	cv::Mat Uregister; //applied voltages with feedback ratio
 	cv::Mat actarray; //active actuators
+
+	void WFSMirrSetUGroupClose(cv::Mat& D);//set voltages from D on Mirror in close loop. Simultaneously!!
 
 	void WFSMirrSetUGroup(cv::Mat& D);//set voltages from D on Mirror. Simultaneously!!
 	void WFSMirrSetAllZero();//set all 0.0 voltages
 	void WFSMirrSetActU(int id, double val); //set on id mirror electrode voltage val another set 0.0
 
-	//cv::Mat FOMirr;// mirror response functions (pzrnk coef. on each active electrod)
+	cv::Mat FOMirr;// mirror response functions (pzrnk coef. on each active electrod)
 	cv::Mat FOMirrAll;// mirror response functions (pzrnk coef. on each active electrod)
 	cv::Mat UMirrAll;// calculated voltage value for all electrodes
-	//cv::Mat rfPL;//AT*(AT*A)^(-1)=F  U=B*F without Tip/Tilt
+	cv::Mat UMirr;// calculated voltage value for all electrodes
+	cv::Mat rfPL;//AT*(AT*A)^(-1)=F  U=B*F without Tip/Tilt
 	cv::Mat rfPLAll;// -||- with Tip/Tilt
 
 	int WFSMirrCheckFO(std::string& dirname);//check mirror response functions from FO DIR in m_nactiveact calc number of active
@@ -67,4 +73,5 @@ public:
 	double Get_WFSMirrcoef() const { return m_coef; };
 	int Get_WFSMirrnact()  const { return m_nact; };
 
+	void Set_WFSMirrcoef(double val) {m_coef=val; };
 };

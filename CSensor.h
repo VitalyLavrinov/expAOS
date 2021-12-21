@@ -62,17 +62,28 @@ private:
 	cv::Point2d m_averindec;// abs(mean) val in deque of (x,y)
 
 	int m_subtrah; // subaperture number to diff subtraction
-	double m_EntranceDiameter;// of telescope? or beam on photodetector matrix? !!!
-	double m_distbetSub;//subaperture diameter....inscribed or circumscribed circle?!!!
-	double m_R0k1;// constants of the formula 
-	double m_R0k2;//for calculating the coefficients 
-	double m_R0k3;//of the structure function 
-	double m_Cn2k1;//of the refractive index
-	double m_Cn2k2;// loading from ini? !!!
 
-	double m_Dispersion;//
-	double m_R0;//Fried parameter
-	double m_Cn2;//structure function coefficients of the refractive index
+	 struct  turbstat {
+		double m_R0k1;// constants of the formula
+		double m_R0k2;//for calculating the coefficients
+		double m_R0k3;//of the structure function
+		double m_Cn2k1;//of the refractive index
+		double m_Dispersion;//
+		double m_R0;//Fried parameter
+		double m_Cn2;//structure function coefficients of the refractive index
+
+	};
+
+
+	 double m_EntranceDiameter;// lens diameter on photodetector matrix in sm !!!   G=14.817449
+	 double m_distbetSub;//....distance between centers of subapertures on telescope (sub--subtrah) ?!!!
+	 double m_r0k1;//CONSTANT FROM INI file to r0=r0K1*lwave^6/5 *(  [r0K2*D^-1/3 - r0K3(xy)*d^-1/3] / DISP )^3/5
+	 double m_r0k2;
+	 double m_r0k3x;
+	 double m_r0k3y;
+	 double m_cn2k1;// cn2=DISP/ (Ñ1*L*[r0K2*D^-1/3 - r0K3(xy)*d^-1/3])
+
+	void TurbConstInit();
 
 public:
 	using CCamera::frames;//frames buffer
@@ -95,6 +106,7 @@ public:
 	cv::Mat wfCT;// results for different fillings of the lenslet, taking into account the tip/tilt presence
 	cv::Mat wfCTTT;
 	cv::Mat wfCTl;
+	cv::Mat wfCTtmpl;
 	cv::Mat wfCTTTl;
 
 	/*Correlation offsets*/
@@ -107,7 +119,20 @@ public:
 
 	CSensor();
 	CSensor(const std::string& ini, const char* CamId);
-	~CSensor() {};
+	~CSensor() {
+		CTdecX.clear();
+		SpecX.clear();
+		CTdecY.clear();
+		SpecY.clear();
+		CTDiffX.clear();
+		CTDiffY.clear();
+		CTdecX.~deque();
+		SpecX.~deque();
+		CTdecY.~deque();
+		SpecY.~deque();
+		CTDiffX.~deque();
+		CTDiffY.~deque();
+	};
 	void ReLoadData();// called when the sensor parameters are changed
 	virtual void DrowFrame(const cv::Mat& out, int left, int top, double scale) const; //Drow cam.frame with left top offsets with scale. 
 	virtual void DrowSub(const cv::Mat& out, int left, int top, double scale) const;
@@ -146,6 +171,7 @@ public:
 	int Get_shftrow() const { return m_shftrow; }//getter
 	int Get_norm() const { return m_norm; }//getter
 	int Get_sub() const { return m_sub; }//getter
+	int Get_subtrah() const {return m_subtrah;}
 	double Get_szelens() const { return m_szelens; }//getter
 	double Get_pixsze() const { return m_pixsze; }//getter
 	double Get_lwave() const { return m_lwave; }//getter
@@ -180,6 +206,7 @@ public:
 	void Set_npzrnk(int val) { m_npzrnk = val; }//Setter
 	void Set_treshlow(int val) { m_treshlow = val; }//Setter
 	void Set_treshhigh(int val) { m_treshhigh = val; }//Setter
+	void Set_subtrah(int val) { m_subtrah = val; }//Setter
 
 	cv::Point2d Get_maxindec() const { return m_maxindec; }//getter
 	cv::Point2d Get_averindec() const { return m_averindec; }//getter
@@ -196,7 +223,7 @@ public:
 	void GetStatCTDeq();//get statistic in CTdecX,CTdecY res in Point2d
 
 	void Spectrum(int N, double f0, double fen, double fd, std::deque<double>& CT, std::deque<double>& SP);// calculate spectrum
-	void DrowSpectrum(int N, int x, int y, double scl1, int fd, std::deque<double>& SP);//drow spectrum
+	void DrowSpectrum(CDC* sdc, int N, int x, int y, double scl1, int fd, std::deque<double>& SP);//drow spectrum
 
 	int Get_m_Speccnt() const { return m_Speccnt; }//getter
 
@@ -204,9 +231,27 @@ public:
 	std::deque <double> CTDiffX;// diffs between m_sub & m_subtresh
 	std::deque <double> CTDiffY;// diffs between m_sub & m_subtresh
 
-	void CSensor::GetR0(std::deque<double>& diff);//  calculate Freed parameter
+	double CSensor::CalcDisp(std::deque<double>& diff);// calculate Dispersion
+	void CSensor::CalcR0(std::deque<double>& diff, turbstat& stat,double Disp);//  calculate Freed parameter && cn2
 
-	double Get_Dispersion() const { return m_Dispersion; }//getter
-	double Get_R0() const { return m_R0; }//getter
-	double Get_Cn2() const { return m_Cn2; }//getter
+	turbstat m_statx;//statistics struct for x and y axis to diff sub-subtrah
+	turbstat m_staty;
+	turbstat m_statonex;//statistics struct for one chanel x and y axis
+	turbstat m_statoney;
+
+	double Get_Dispersion(turbstat& stat) const { return stat.m_Dispersion; }//getter
+	double Get_R0(turbstat& stat) const { return stat.m_R0; }//getter
+	double Get_Cn2(turbstat& stat) const { return stat.m_Cn2; }//getter
+
+	double Get_entrancediameter() const { return m_EntranceDiameter; }//getter
+	double Get_distbetsub() const { return m_distbetSub; }//getter
+	void Set_entrancediameter(double val) { m_EntranceDiameter = val; }//Setter
+	void Set_distbetsub(double val) { m_distbetSub = val; }//Setter
+
+	double Get_r0k1() const { return m_r0k1; }//getter
+	double Get_r0k2() const { return m_r0k2; }//getter
+	double Get_r0k3x() const { return m_r0k3x; }//getter
+	double Get_r0k3y() const { return m_r0k3y; }//getter
+	double Get_cn2k1() const { return m_cn2k1; }//getter
+
 };
