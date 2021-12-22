@@ -27,6 +27,7 @@ constexpr int FRAME_COUNT(3); //cnt frames to asynchronous input
         {
         private:
             CDC* outdc;
+            std::string m_exposname;
             std::string m_ini;
             int width;
             int height;
@@ -34,10 +35,10 @@ constexpr int FRAME_COUNT(3); //cnt frames to asynchronous input
             int offsety;
             int expos; 
             bool m_Connected;
-            bool bGigE;// true if GigE cam interface, needs to SetExpos function
+            bool bGigE;// true if GigE cam interface, needs to SetExpos function??
             const char*         pCameraID;
             VmbError_t          err;     // Initialize the Vimba API
-            VmbCameraInfo_t*    pCameras;             // A list of camera details
+            VmbCameraInfo_t* pCameras;             // A list of camera details
             VmbUint32_t         nCount;                // Number of found cameras
             VmbUint32_t         nFoundCount;                // Change of found cameras ??? work if cam pluged after prog run
             VmbUint32_t         nTimeout;             // Timeout for Grab
@@ -48,7 +49,6 @@ constexpr int FRAME_COUNT(3); //cnt frames to asynchronous input
             VmbInt64_t          nPayloadSize;                // The size of one frame
            
             void GetCamIni(const std::string& ini);//Cam prop from inifile
-            int CameraList();// Get all cameras to pCameras
             int SetFrameFeacher(int, int, int, int);//Seter frame width offsets 
             //fps counter
             double m_fps;
@@ -63,15 +63,17 @@ constexpr int FRAME_COUNT(3); //cnt frames to asynchronous input
            public:
             bool m_FSTART;
             CCamera();
-            CCamera(const std::string &ini, const char* CamId);
+            CCamera(const std::string &ini, const char* CamId, const std::string& exposname);
             ~CCamera() { m_FSTART = 0; CameraClose(); /*VmbShutdown();*/ }
-            bool CameraConnect(); //Connect Camera by id;
+            int CameraConnect(); //Connect Camera by id;
+            int CameraList();// Get all cameras to pCameras
             void CameraClose();// camera kill
             int GetCamExpos();//get expos from camera
             int SetCamExpos(float);//set expos tp camera
-            int GetExpos() const { return expos; }//getter
+             int GetExpos() const { return expos; }//getter
             int GetOffsetx() const { return offsetx; }//getter
             int GetOffsety() const { return offsety; }//getter
+            int Getheight() const { return height; }//getter
             bool GetConnected() const;// Gets connect flag
             int CameraFrame(); //get One frame
             int CameraFrameN();// start frame stream

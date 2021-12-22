@@ -11,9 +11,9 @@ CSensor::CSensor() : CCamera() {
 	m_idframe = 0;
 	ReLoadData();
 }
-CSensor::CSensor(const std::string& ini, const char* CamId) : CCamera(ini,CamId) {
+CSensor::CSensor(const std::string& ini, const char* CamId, const std::string& expname) : CCamera(ini,CamId, expname) {
 	LoadIni(ini);
-	m_Speccnt = 1000; //!! because max Cam fps in our system 1000
+	m_Speccnt = 1000; 
 	m_idframe = 0;
 	TurbConstInit();
 	ReLoadData();
@@ -182,6 +182,8 @@ void CSensor::DrowSub(const cv::Mat& out, int left, int top, double scale) const
 	int x, y;
 	    x = static_cast<int>(m_sub % m_srastr) - 1;
 		y = static_cast<int>(m_sub / m_srastr);
+		if (m_srastr <= 1) { x = 0; y = 0; }
+
 	tmp = out(subs(x, y));
 
 	cvtColor(tmp, dst, cv::COLOR_GRAY2RGBA);
@@ -316,8 +318,17 @@ void CSensor::CTDeqAdd() {
 	//CTDiffY.push_back(CTMaxDif.at<double>(m_subtrah));
 }
 
+//add mesuared vals in deques if one sub
+void CSensor::CTDeqAddOneSub() {
+	CTdecX.pop_front();
+	CTdecX.push_back(CTMaxDif.at<double>(0));
+	CTdecY.pop_front();
+	CTdecY.push_back(CTMaxDif.at<double>(1));
+}
+
 //calc max & aver val in deq
 void CSensor::GetStatDeq(std::deque<double>& deq,double& maxin, double& averin) {
+
 	maxin=0.0;
 	averin =  0.0;
 	double sum = 0.0;

@@ -118,7 +118,7 @@ public:
 	cv::Mat ReffKor;// reference frame for calculating correlation
 
 	CSensor();
-	CSensor(const std::string& ini, const char* CamId);
+	CSensor(const std::string& ini, const char* CamId, const std::string& expname);
 	~CSensor() {
 		CTdecX.clear();
 		SpecX.clear();
@@ -218,6 +218,7 @@ public:
 	std::deque <double> SpecY;// dx spectrum
 
 	void CTDeqAdd();//add mesuared vals in deques
+	void CTDeqAddOneSub();//add mesuared vals in deques if used one sub
 
 	void GetStatDeq(std::deque<double>& deq, double& maxin, double& averin);//calc max & abs(mean) val in deq
 	void GetStatCTDeq();//get statistic in CTdecX,CTdecY res in Point2d
@@ -226,6 +227,7 @@ public:
 	void DrowSpectrum(CDC* sdc, int N, int x, int y, double scl1, int fd, std::deque<double>& SP);//drow spectrum
 
 	int Get_m_Speccnt() const { return m_Speccnt; }//getter
+	void Set_m_Speccnt(int val) { m_Speccnt=val; }//setter
 
 	/*Cn2*/
 	std::deque <double> CTDiffX;// diffs between m_sub & m_subtresh

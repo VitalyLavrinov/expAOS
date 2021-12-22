@@ -12,7 +12,7 @@ CWFSControler::CWFSControler() : CSensor() {
 	WFSMirrLoadFO(fo);
 }
 
-CWFSControler::CWFSControler(const std::string& ini, const char* CamId) : CSensor(ini, CamId) {
+CWFSControler::CWFSControler(const std::string& ini, const char* CamId, const std::string& ename) : CSensor(ini, CamId, ename) {
 	m_MConnected = false;
 	m_HVon = false;
 	m_nact = NACT;

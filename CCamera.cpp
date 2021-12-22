@@ -5,6 +5,7 @@
    // without starting  Vimba API, used only for model films
    CCamera::CCamera() {
     m_ini = "default.ini";
+    m_exposname = "ExposureTimeAbs";
     m_FSTART = false;
     m_Connected = false;
     err = NULL;
@@ -23,9 +24,10 @@
     GetCamIni(m_ini);
   }
   // with starting  Vimba API, NOT USE  for model films
-  CCamera::CCamera(const std::string &ini, const char* CI) {
+  CCamera::CCamera(const std::string &ini, const char* CI, const std::string& exposname) {
             pCameraID = CI;
             m_ini = ini;
+            m_exposname = exposname;
             m_FSTART = false;
             m_Connected = false;
             m_fps = 0.0;
@@ -118,27 +120,35 @@
       
         // Get all cameras to pCameras list? return count cameras in system
         int CCamera::CameraList() {
-            if (VmbErrorSuccess == VmbFeatureBoolGet(cameraHandle, "GeVTLIsPresent", &bGigE)) {
-                if (bGigE== VmbBoolTrue) {
-                    if (VmbErrorSuccess == VmbFeatureIntSet(cameraHandle, "GeVDiscoveryAllDuration", 250)) {
-                        err = VmbFeatureCommandRun(cameraHandle, "GeVDiscoveryAllOnce");      // Send discovery packets to GigE cameras and wait 250 ms until they are answered
+          //  bool bGigE1;
+
+            if (VmbErrorSuccess == VmbFeatureBoolGet(gVimbaHandle, "GeVTLIsPresent", &bGigE)) {
+                if (VmbBoolTrue == bGigE) {
+                    if (VmbErrorSuccess == VmbFeatureIntSet(gVimbaHandle, "GeVDiscoveryAllDuration", 250)) {
+                        err = VmbFeatureCommandRun(gVimbaHandle, "GeVDiscoveryAllOnce");      // Send discovery packets to GigE cameras and wait 250 ms until they are answered
                     }
                 }
             }
             if (VmbErrorSuccess == VmbCamerasList(NULL, 0, &nCount, sizeof * pCameras) && nCount != 0) {
                 pCameras = (VmbCameraInfo_t*)malloc(nCount * sizeof(*pCameras));
                 err = VmbCamerasList(pCameras, nCount, &nFoundCount, sizeof * pCameras);
-                return nFoundCount;
+                if (nFoundCount != 0) {
+                    return nFoundCount;
+                }
+                else return 0;
             }
             else return 0;
         }
 
         //Connect Camera by id;
-        bool CCamera::CameraConnect() {
+        int CCamera::CameraConnect() {
+            CameraList();
             if (pCameraID !=NULL) {
                 // Open camera
                 err = VmbCameraOpen(pCameraID, cameraAccessMode, &cameraHandle);
-                VmbFeatureBoolGet(cameraHandle, "GeVTLIsPresent", &bGigE);
+
+
+
                 if (err == VmbErrorSuccess)
                 {
                     // Set the GeV packet size to the highest possible value
@@ -176,11 +186,12 @@
                                 m_Connected = 1;
                                 SetFrameFeacher(width, height, offsetx, offsety);
                                 SetCamExpos(static_cast<float>(expos));
-                            } else {m_Connected = 0; return false;}
-                        } else { m_Connected = 0; return false;}
-                    } else { m_Connected = 0; return false;}
-                }  else { m_Connected = 0; return false;}
-            } else { m_Connected = 0; return false; }
+                                return 1;
+                            } else {m_Connected = 0; return -1;}
+                        } else { m_Connected = 0; return -2;}
+                    } else { m_Connected = 0; return -3;}
+                }  else { m_Connected = 0; return -4;}
+            } else { m_Connected = 0; return -5; }
         }
 
         //Set frame  width offsets
@@ -190,21 +201,19 @@
                 height = y;
                 offsetx = ox;
                 offsety = oy;
+
                 err = VmbFeatureIntSet(cameraHandle, "Width", width);
                 err = VmbFeatureIntSet(cameraHandle, "Height", height);
                 err = VmbFeatureIntSet(cameraHandle, "OffsetX", offsetx);
                 err = VmbFeatureIntSet(cameraHandle, "OffsetY", offsety);
+
             } return err;
         }
 
         //Get expos
         int CCamera::GetCamExpos(){
             double val;
-            if (bGigE == VmbBoolTrue)
-                 err = VmbFeatureFloatGet(cameraHandle, "ExposureTimeAbs", &val);
-             else
-                err = VmbFeatureFloatGet(cameraHandle, "ExposureTime", &val);
-
+            err = VmbFeatureFloatGet(cameraHandle, m_exposname.c_str(), &val);
             if (err== VmbErrorSuccess) return (static_cast<int>(val));
             else return 0;
         }
@@ -212,10 +221,7 @@
         //Set expos
         int CCamera::SetCamExpos(float val) {
             if (val == 0.0) val = static_cast<float>(expos);
-            if (bGigE == VmbBoolTrue)
-                err = VmbFeatureFloatSet(cameraHandle, "ExposureTimeAbs", val);
-            else
-                err = VmbFeatureFloatSet(cameraHandle, "ExposureTime", val);
+            err = VmbFeatureFloatSet(cameraHandle, m_exposname.c_str(), val);
             if (err== VmbErrorSuccess) expos = static_cast<int>(val);
             return err;
        }

@@ -25,7 +25,7 @@ private:
 
 public:
 	CWFSControler();
-	CWFSControler(const std::string& ini, const char* CamId);
+	CWFSControler(const std::string& ini, const char* CamId, const std::string& expname);
 	~CWFSControler() //Must Set mirror poweroff & high Voltage to OFF !! if PC poweroff we will have problem.
 	{
 		if (Get_WFSMirrConnected()) {

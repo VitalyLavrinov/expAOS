@@ -20,12 +20,19 @@
 
 std::string WFSini = "defaultWFS.ini"; // change to const later
 std::string Lensini = "strlenses.ini";
-CWFSControler pWFS(WFSini, "DEV_1AB228000271");
+CWFSControler pWFS(WFSini, "DEV_1AB228000271", "ExposureTime");
+
+std::string TTSLensini = "strlensesTTS.ini";
+std::string TTSini = "defaultTTS.ini"; 
+CSensor pTTS(TTSini, "DEV_000F315BA3F6", "ExposureTimeAbs");
+
+
 
 CVLT pVLT;//Voltage window
 CCT pCT; //CT write window
 CZRNK pZRNK;  //Zernike write & wavefront drow window
 CSTAT pSTAT;
+CSTAT pSTATTTS;
 std::vector<CButton*> pButton;//active lenses checkbuttons
 
 CexpAOSDlg::CexpAOSDlg(CWnd* pParent /*=nullptr*/)
@@ -63,12 +70,21 @@ BEGIN_MESSAGE_MAP(CexpAOSDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BSTATWFS, &CexpAOSDlg::OnBnClickedBstatwfs)
 	ON_BN_CLICKED(IDC_BFONEXT, &CexpAOSDlg::OnBnClickedBfonext)
 	ON_BN_CLICKED(IDC_BFOPREV, &CexpAOSDlg::OnBnClickedBfoprev)
+	ON_BN_CLICKED(IDC_BtnCnnctTTS, &CexpAOSDlg::OnBnClickedBtncnncttts)
+	ON_BN_CLICKED(IDC_BtnSetExpTTS, &CexpAOSDlg::OnBnClickedBtnsetexptts)
+	ON_BN_CLICKED(IDC_BtnOneTTS, &CexpAOSDlg::OnBnClickedBtnonetts)
+	ON_BN_CLICKED(IDC_BtnStartTTS, &CexpAOSDlg::OnBnClickedBtnstarttts)
+	ON_BN_CLICKED(IDC_BtnTtsProp, &CexpAOSDlg::OnBnClickedBtnttsprop)
+	ON_BN_CLICKED(IDC_BtnGeRefTTS, &CexpAOSDlg::OnBnClickedBtngereftts)
+	ON_BN_CLICKED(IDC_BSTATTTS, &CexpAOSDlg::OnBnClickedBstattts)
+	ON_BN_CLICKED(IDC_BtnStopTTS, &CexpAOSDlg::OnBnClickedBtnstoptts)
+	ON_BN_CLICKED(IDC_BtnANLProp, &CexpAOSDlg::OnBnClickedBtnanlprop)
 END_MESSAGE_MAP()
 
 void CexpAOSDlg::ShowFrameDataWfs(cv::Mat& out) {
 
 	pWFS.DrowFrame(out, 5, 5, 0.5);
-	//pWFS.DrowSub(out, out.cols / 2 + 20, 5, 4.0);
+	//	pWFS.DrowSub(out,5, out.cols / 2 + 10,3.0);
 	pWFS.GetCTOffsetsWfs(out);
 	//ShowCT();
 
@@ -131,7 +147,7 @@ void CexpAOSDlg::ShowFrameDataWfs(cv::Mat& out) {
 
 void CexpAOSDlg::ShowFrameDataWfsOne(cv::Mat &out) {
 	pWFS.DrowFrame(out, 5, 5, 0.5);
-	pWFS.DrowSub(out,out.cols/2+20,5,4.0);
+	pWFS.DrowSub(out,5, out.cols / 2 + 10,3.0);
 	pWFS.GetCTOffsetsWfs(out);
 	ShowCT();
 
@@ -190,6 +206,13 @@ void CexpAOSDlg::ShowFrameDataWfsOne(cv::Mat &out) {
 
 }
 
+void CexpAOSDlg::ShowFrameDataTTSOne(cv::Mat& out) {
+	pTTS.GetCTOffsetsWfs(out);
+	pTTS.GetCTWfsCorr(out);
+	pTTS.DrowFrame(out, 750, 5, 1.0);
+	pTTS.DrowSub(out, 750, out.rows+10, 2.0);
+	ShowCTTTS();
+}
 
 // CexpAOSDlg message handlers
 void CexpAOSDlg::IniCT() {
@@ -228,6 +251,34 @@ void CexpAOSDlg::IniCT() {
 	pCT.m_CT.SetBkColor(RGB(238, 176, 108));
 }
 
+void CexpAOSDlg::IniStat() {
+	CString str;
+	str.Format("%1.5f", pWFS.m_statx.m_R0k1);
+	pSTAT.SetDlgItemText(IDC_SK1, str);
+	str.Format("%1.5f", pWFS.m_statx.m_R0k2);
+	pSTAT.SetDlgItemText(IDC_SK2, str);
+	str.Format("%1.5f", pWFS.m_statx.m_R0k3);
+	pSTAT.SetDlgItemText(IDC_SK3X, str);
+	str.Format("%1.5f", pWFS.m_staty.m_R0k3);
+	pSTAT.SetDlgItemText(IDC_SK3Y, str);
+	str.Format("%1.5f", pWFS.m_statx.m_Cn2k1);
+	pSTAT.SetDlgItemText(IDC_SC1, str);
+	str.Format("%1.5f", pWFS.m_statonex.m_Cn2k1);
+	pSTAT.SetDlgItemText(IDC_SC2, str);
+}
+void CexpAOSDlg::IniStatTTS() {
+	CString str;
+	str.Format("%1.5f", pTTS.m_statx.m_R0k1);
+	pSTATTTS.SetDlgItemText(IDC_SK1, str);
+	str.Format("%1.5f", pTTS.m_statx.m_R0k2);
+	pSTATTTS.SetDlgItemText(IDC_SK2, str);
+	pSTATTTS.SetDlgItemText(IDC_SK3X, "0.0");
+	pSTATTTS.SetDlgItemText(IDC_SK3Y, "0.0");
+	pSTATTTS.SetDlgItemText(IDC_SC1, "-");
+	str.Format("%1.5f", pTTS.m_statonex.m_Cn2k1);
+	pSTATTTS.SetDlgItemText(IDC_SC2, str);
+}
+
 void CexpAOSDlg::ShowCT()
 {
 	CString str;
@@ -262,6 +313,29 @@ void CexpAOSDlg::ShowCT()
 		}
 }
 
+void CexpAOSDlg::ShowCTTTS()
+{
+	CString str;
+	int k = 0;
+	SetDlgItemInt(IDC_STTSMAX, static_cast<int>(pTTS.MaxI.at<double>(k, k)));
+	str.Format("%3.2f", pTTS.CTMaxReff.at<double>(k));
+	SetDlgItemText(IDC_STTSRFFX, str);
+	str.Format("%3.2f", pTTS.CTMaxReff.at<double>(k + 1));
+	SetDlgItemText(IDC_STTSRFFY, str);
+	str.Format("%3.2f", pTTS.CTMax.at<double>(k));
+	SetDlgItemText(IDC_STTSCTX, str);
+	str.Format("%3.2f", pTTS.CTMax.at<double>(k + 1));
+	SetDlgItemText(IDC_STTSCTY, str);
+	str.Format("%3.2f", pTTS.CTMaxDif.at<double>(k));
+	SetDlgItemText(IDC_STTSDX, str);
+	str.Format("%3.2f", pTTS.CTMaxDif.at<double>(k + 1));
+	SetDlgItemText(IDC_STTSDY, str);
+	str.Format("%3.2f", pTTS.CTCorr.at<double>(k));
+	SetDlgItemText(IDC_STTSCORX, str);
+	str.Format("%3.2f", pTTS.CTCorr.at<double>(k + 1));
+	SetDlgItemText(IDC_STTSCORY, str);
+}
+
 void CexpAOSDlg::ShowSubStat() {
 	CString str;
 	str.Format("%3.2f", pWFS.Get_CTm_subinPoint().x);
@@ -278,6 +352,22 @@ void CexpAOSDlg::ShowSubStat() {
 	pSTAT.SetDlgItemText(IDC_SAVERY, str);
 }
 
+void CexpAOSDlg::ShowSubStatOneSub() {
+	CString str;
+	str.Format("%3.2f", pTTS.Get_CTm_subinPoint().x);
+	pSTATTTS.SetDlgItemText(IDC_SCARX, str);
+	str.Format("%3.2f", pTTS.Get_CTm_subinPoint().y);
+	pSTATTTS.SetDlgItemText(IDC_SCARY, str);
+	str.Format("%3.2f", pTTS.Get_maxindec().x);
+	pSTATTTS.SetDlgItemText(IDC_SMAXX, str);
+	str.Format("%3.2f", pTTS.Get_maxindec().y);
+	pSTATTTS.SetDlgItemText(IDC_SMAXY, str);
+	str.Format("%3.2f", pTTS.Get_averindec().x);
+	pSTATTTS.SetDlgItemText(IDC_SAVERX, str);
+	str.Format("%3.2f", pTTS.Get_averindec().y);
+	pSTATTTS.SetDlgItemText(IDC_SAVERY, str);
+}
+
 void CexpAOSDlg::ShowCn2Stat() {
 	CString str;
 
@@ -285,29 +375,54 @@ void CexpAOSDlg::ShowCn2Stat() {
 	pSTAT.SetDlgItemText(IDC_SDISPY, str);
 	str.Format("%1.5f", pWFS.Get_Cn2(pWFS.m_staty));
 	pSTAT.SetDlgItemText(IDC_SCNY, str);
-	str.Format("%1.5f", pWFS.Get_R0(pWFS.m_staty));
+	str.Format("%2.2f", pWFS.Get_R0(pWFS.m_staty));
 	pSTAT.SetDlgItemText(IDC_SR0Y, str);
 
 	str.Format("%1.5f", pWFS.Get_Dispersion(pWFS.m_statx));
 	pSTAT.SetDlgItemText(IDC_SDISPX, str);
 	str.Format("%1.5f", pWFS.Get_Cn2(pWFS.m_statx));
 	pSTAT.SetDlgItemText(IDC_SCNX, str);
-	str.Format("%1.5f", pWFS.Get_R0(pWFS.m_statx));
+	str.Format("%2.2f", pWFS.Get_R0(pWFS.m_statx));
 	pSTAT.SetDlgItemText(IDC_SR0X, str);
 
 	str.Format("%1.5f", pWFS.Get_Dispersion(pWFS.m_statonex));
 	pSTAT.SetDlgItemText(IDC_SDISPSUBX, str);
 	str.Format("%1.5f", pWFS.Get_Cn2(pWFS.m_statonex));
 	pSTAT.SetDlgItemText(IDC_SCNSUBX, str);
-	str.Format("%1.5f", pWFS.Get_R0(pWFS.m_statonex));
+	str.Format("%2.2f", pWFS.Get_R0(pWFS.m_statonex));
 	pSTAT.SetDlgItemText(IDC_SRSUBX, str);
 
 	str.Format("%1.5f", pWFS.Get_Dispersion(pWFS.m_statoney));
 	pSTAT.SetDlgItemText(IDC_SDISPSUBY, str);
 	str.Format("%1.5f", pWFS.Get_Cn2(pWFS.m_statoney));
 	pSTAT.SetDlgItemText(IDC_SCNSUBY, str);
-	str.Format("%1.5f", pWFS.Get_R0(pWFS.m_statoney));
+	str.Format("%2.2f", pWFS.Get_R0(pWFS.m_statoney));
 	pSTAT.SetDlgItemText(IDC_SRSUBY, str);
+}
+
+void CexpAOSDlg::ShowCn2StatOneSub() {
+	CString str;
+
+	pSTATTTS.SetDlgItemText(IDC_SDISPY, "-");
+	pSTATTTS.SetDlgItemText(IDC_SCNY, "-");
+	pSTATTTS.SetDlgItemText(IDC_SR0Y, "-");
+	pSTATTTS.SetDlgItemText(IDC_SDISPX, "-");
+	pSTATTTS.SetDlgItemText(IDC_SCNX, "-");
+	pSTATTTS.SetDlgItemText(IDC_SR0X, "-");
+	
+	str.Format("%1.5f", pTTS.Get_Dispersion(pTTS.m_statonex));
+	pSTATTTS.SetDlgItemText(IDC_SDISPSUBX, str);
+	str.Format("%1.5f", pTTS.Get_Cn2(pTTS.m_statonex));
+	pSTATTTS.SetDlgItemText(IDC_SCNSUBX, str);
+	str.Format("%2.2f", pTTS.Get_R0(pTTS.m_statonex));
+	pSTATTTS.SetDlgItemText(IDC_SRSUBX, str);
+	
+	str.Format("%1.5f", pTTS.Get_Dispersion(pTTS.m_statoney));
+	pSTATTTS.SetDlgItemText(IDC_SDISPSUBY, str);
+	str.Format("%1.5f", pTTS.Get_Cn2(pTTS.m_statoney));
+	pSTATTTS.SetDlgItemText(IDC_SCNSUBY, str);
+	str.Format("%2.2f", pTTS.Get_R0(pTTS.m_statoney));
+	pSTATTTS.SetDlgItemText(IDC_SRSUBY, str);
 }
 
 void CexpAOSDlg::ShowCorr()
@@ -465,6 +580,9 @@ BOOL CexpAOSDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	pWFS.CheckLens(Lensini);
+	pTTS.CheckLens(TTSLensini);
+	//pTTS.Set_m_Speccnt(1000);
+	//pTTS.ReLoadData();
 
 	SetDlgItemInt(IDC_SNFO, pWFS.Get_WFSMirrnactiveact());
 	CString str;
@@ -485,31 +603,25 @@ BOOL CexpAOSDlg::OnInitDialog()
 	pZRNK.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOSIZE);
     pSTAT.Create(IDD_DSTAT, this);
 	pSTAT.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOSIZE);
+	pSTATTTS.Create(IDD_DSTAT, this);
+	pSTATTTS.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOSIZE);
 
 	pWFS.SetDC(this->GetDC());
+	pTTS.SetDC(this->GetDC());
 	pWFS.SetWfDC(pZRNK.GetDC());
 	IniCT();
 	IniVLT();
 	IniZRNK();
 	IniLensButt();
+	IniStat();
+	IniStatTTS();
 
 	SetDlgItemInt(IDC_EWFSREFCNT, 100);
 	SetDlgItemText(IDC_ESCL, "250.0");
+	SetDlgItemText(IDC_ESCLTTS, "500.0");
 	SetDlgItemInt(IDC_ELENI, 50);
 	SetDlgItemInt(IDC_CNTGRAB, 1000);
-
-	str.Format("%1.5f", pWFS.m_statx.m_R0k1);
-	pSTAT.SetDlgItemText(IDC_SK1, str);
-	str.Format("%1.5f", pWFS.m_statx.m_R0k2);
-	pSTAT.SetDlgItemText(IDC_SK2, str);
-	str.Format("%1.5f", pWFS.m_statx.m_R0k3);
-	pSTAT.SetDlgItemText(IDC_SK3X, str);
-	str.Format("%1.5f", pWFS.m_staty.m_R0k3);
-	pSTAT.SetDlgItemText(IDC_SK3Y, str);
-	str.Format("%1.5f", pWFS.m_statx.m_Cn2k1);
-	pSTAT.SetDlgItemText(IDC_SC1, str);
-	str.Format("%1.5f", pWFS.m_statonex.m_Cn2k1);
-	pSTAT.SetDlgItemText(IDC_SC2, str);
+	SetDlgItemInt(IDC_EWFSREFCNTTTS, 100);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -649,8 +761,7 @@ UINT ThreadDrowWFSLoop(LPVOID pParam)
 {
 	CexpAOSDlg* ptrView = (CexpAOSDlg*)pParam;
 	CString str;
-	ptrView->GetDlgItemText(IDC_ESCL, str);
-	double scl = atof(str);
+
 	int cnt;
 	double fd;
 	pWFS.CCamera::SetDC(ptrView->GetDC());
@@ -731,9 +842,8 @@ void CexpAOSDlg::OnBnClickedBtnwfsprop()
 {
 	CWFSPROP pWFSPROP;
 	CString str;
-
+	pSTAT.SetWindowTextA("Statistics Wavefront sensor");
 	pWFS.m_FSTART = 0;
-
 	str.Format("%d", pWFS.Get_sdx());
 	pWFSPROP.m_SDX = str; 
 	str.Format("%d", pWFS.Get_sdy());
@@ -915,8 +1025,10 @@ void CexpAOSDlg::OnBnClickedBtnwfsmirrshowgui()
 
 BOOL CexpAOSDlg::DestroyWindow()
 {
-	
+	pWFS.m_FSTART = 0;
+	pTTS.m_FSTART = 0;
 	pWFS.~CWFSControler();
+	pTTS.~CSensor();
 
 	return CDialogEx::DestroyWindow();
 }
@@ -1083,6 +1195,7 @@ UINT ThreadWFSCloseLoop(LPVOID pParam)
 void CexpAOSDlg::OnBnClickedBstatwfs()
 {
 	CString str;
+//	pSTAT.SetWindowText("Statistics WFS");
 	str.Format("Current sub:%d", pWFS.Get_sub());
 	pSTAT.SetDlgItemText(IDC_SSUB, str);
 	str.Format("Difference sub:%d - sub:%d", pWFS.Get_sub(), pWFS.Get_subtrah());
@@ -1106,11 +1219,7 @@ UINT ThreadStatWFSLoop(LPVOID pParam)
 {
 	CexpAOSDlg* ptrView = (CexpAOSDlg*)pParam;
 	CString str;
-	
-	//ptrView->GetDlgItemText(IDC_ESCL, str);
-	//double scl = atof(str);
-	double fd;
-	//CDC* specdc = pSTAT.GetDC();
+	double fd,dsp;
 	int i = 0;
 	pWFS.setzerotime();
 	int cnt = pWFS.Get_m_Speccnt();
@@ -1128,6 +1237,15 @@ UINT ThreadStatWFSLoop(LPVOID pParam)
 					fd = pWFS.fpsiter();
 
 					if (i % (pWFS.Get_m_Speccnt()) == 0 && i>1) {
+						pWFS.GetStatCTDeq();
+						dsp = pWFS.CalcDisp(pWFS.CTdecX);
+						pWFS.CalcR0(pWFS.CTdecX, pWFS.m_statonex, dsp);
+						dsp = pWFS.CalcDisp(pWFS.CTdecY);
+						pWFS.CalcR0(pWFS.CTdecY, pWFS.m_statoney, dsp);
+						dsp = pWFS.CalcDisp(pWFS.CTDiffY);
+						pWFS.CalcR0(pWFS.CTDiffY, pWFS.m_staty, dsp);
+						dsp = pWFS.CalcDisp(pWFS.CTDiffX);
+						pWFS.CalcR0(pWFS.CTDiffX, pWFS.m_statx, dsp);
 						AfxBeginThread(ThreadDrowSpec, ptrView, THREAD_PRIORITY_HIGHEST);
 					}
 
@@ -1160,23 +1278,9 @@ UINT ThreadDrowSpec(LPVOID pParam) {
 	double scl = atof(str);
 	int cnt = pWFS.Get_m_Speccnt();
 	double fd = pWFS.getfps();
-	double dsp;
 
-	pWFS.GetStatCTDeq();
 	ptrView->ShowSubStat();
-
-	dsp = pWFS.CalcDisp(pWFS.CTdecX);
-	pWFS.CalcR0(pWFS.CTdecX, pWFS.m_statonex, dsp);
-	dsp = pWFS.CalcDisp(pWFS.CTdecY);
-	pWFS.CalcR0(pWFS.CTdecY, pWFS.m_statoney, dsp);
-
-	dsp = pWFS.CalcDisp(pWFS.CTDiffY);
-	pWFS.CalcR0(pWFS.CTDiffY, pWFS.m_staty, dsp);
-	dsp = pWFS.CalcDisp(pWFS.CTDiffX);
-	pWFS.CalcR0(pWFS.CTDiffX, pWFS.m_statx, dsp);
-
 	ptrView->ShowCn2Stat();
-
 
 	pWFS.Spectrum(cnt - 1, 1.0, fd / 2, fd, pWFS.CTdecX, pWFS.SpecX);// x axis coords
 	pWFS.Spectrum(cnt - 1, 1.0, fd / 2, fd, pWFS.CTdecY, pWFS.SpecY);// y axis coords
@@ -1230,4 +1334,256 @@ void CexpAOSDlg::OnBnClickedBfoprev()
 	id--;
 	if (id < 0)id = pWFS.Get_WFSMirrnactiveact() - 1;
 	SetDlgItemInt(IDC_EFON, id);
+}
+
+
+void CexpAOSDlg::OnBnClickedBtncnncttts()
+{
+	int res;
+	CString str;
+	if (!pTTS.GetConnected()) {
+		res = pTTS.CameraConnect();
+		if (res>0) {
+			SetDlgItemInt(IDC_EEXPOSTTS, pTTS.GetCamExpos());
+			SetDlgItemText(IDC_SSTSTTS, "TTS connected.");
+		}
+		else {
+			SetDlgItemText(IDC_SSTSTTS,"TTS NO connections!");
+		}
+	}
+	else SetDlgItemText(IDC_SSTSTTS, "TTS connected ?");
+}
+
+
+void CexpAOSDlg::OnBnClickedBtnsetexptts()
+{
+	if (pTTS.SetCamExpos(static_cast<float>(GetDlgItemInt(IDC_EEXPOSTTS))) == 0)	SetDlgItemInt(IDC_EEXPOSTTS, pTTS.GetCamExpos());
+	else SetDlgItemText(IDC_EEXPOSTTS, "err");
+}
+
+
+void CexpAOSDlg::OnBnClickedBtnonetts()
+{
+	if (pTTS.GetConnected()) {
+		if (!pTTS.m_FSTART) {
+			if (pTTS.CameraFrame()) {
+				ShowFrameDataTTSOne(pTTS.GetFrameMat());
+			}
+		}
+		else SetDlgItemText(IDC_SSTSTTS, "Cam already runing");
+	}
+}
+
+
+void CexpAOSDlg::OnBnClickedBtnstarttts()
+{
+	if (pTTS.GetConnected()) {
+		if (!pTTS.m_FSTART) {
+			pTTS.m_FSTART = 1;
+			SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+			AfxBeginThread(ThreadDrowTTS, this, THREAD_PRIORITY_TIME_CRITICAL);
+		}
+		else SetDlgItemText(IDC_SSTSTTS, "Cam already runing");
+	}
+	else SetDlgItemText(IDC_SSTSTTS, "TTS NO connections!");
+}
+
+UINT ThreadDrowTTS(LPVOID pParam)
+{
+	CexpAOSDlg* ptrView = (CexpAOSDlg*)pParam;
+	pTTS.setzerotime();
+	while (pTTS.m_FSTART) {
+		if (pTTS.CameraFrame()) {
+			ptrView->ShowFrameDataTTSOne(pTTS.GetFrameMat());
+			ptrView->SetDlgItemInt(IDC_STTSFPS, static_cast<int>(pTTS.fpsiter()));
+		}
+	}
+
+	return 0;
+}
+
+void CexpAOSDlg::OnBnClickedBtnttsprop()
+{
+	CWFSPROP pWFSPROP;
+	CString str;
+
+	pTTS.m_FSTART = 0;
+
+	str.Format("%d", pTTS.Get_sdx());
+	pWFSPROP.m_SDX = str;
+	str.Format("%d", pTTS.Get_sdy());
+	pWFSPROP.m_SDY = str;
+	str.Format("%d", pTTS.Get_swnd());
+	pWFSPROP.m_SWND = str;
+	str.Format("%d", pTTS.Get_top());
+	pWFSPROP.m_TOP = str;
+	str.Format("%d", pTTS.Get_left());
+	pWFSPROP.m_LEFT = str;
+	str.Format("%d", pTTS.Get_sub());
+	pWFSPROP.m_SUB = str;
+	str.Format("%d", pTTS.Get_treshlow());
+	pWFSPROP.m_TRESHLOW = str;
+	str.Format("%d", pTTS.Get_treshhigh());
+	pWFSPROP.m_TRESHHIGH = str;
+
+	str.Format("%2.8f", pTTS.Get_szelens());
+	pWFSPROP.m_SZELENS = str;
+	str.Format("%2.8f", pTTS.Get_pixsze());
+	pWFSPROP.m_PIXSZE = str;
+	str.Format("%2.8f", pTTS.Get_lwave());
+	pWFSPROP.m_LWAVE = str;
+	str.Format("%2.8f", pTTS.Get_focuscam());
+	pWFSPROP.m_FOCUSCAM = str;
+	str.Format("%2.8f", pTTS.Get_lpath());
+	pWFSPROP.m_LPATH = str;
+	str.Format("%2.8f", pTTS.Get_coefshift());
+	pWFSPROP.m_COEFSHIFT = str;
+
+	str.Format("%2.8f", pTTS.Get_entrancediameter());
+	pWFSPROP.m_ENTRANCESUB = str;
+
+	if (pWFSPROP.DoModal() == IDOK)
+	{
+		atoi(pWFSPROP.m_SDX) >= 0 ? pTTS.Set_sdx(atoi(pWFSPROP.m_SDX)) : pTTS.Set_sdx(0);
+		atoi(pWFSPROP.m_SDY) >= 0 ? pTTS.Set_sdy(atoi(pWFSPROP.m_SDY)) : pTTS.Set_sdy(0);
+		atoi(pWFSPROP.m_SWND) >= 0 ? pTTS.Set_swnd(atoi(pWFSPROP.m_SWND)) : pTTS.Set_swnd(0);
+		atoi(pWFSPROP.m_TOP) >= 0 ? pTTS.Set_top(atoi(pWFSPROP.m_TOP)) : pTTS.Set_top(0);
+		atoi(pWFSPROP.m_LEFT) >= 0 ? pTTS.Set_left(atoi(pWFSPROP.m_LEFT)) : pTTS.Set_left(0);
+		atoi(pWFSPROP.m_SUB) >= 0 ? pTTS.Set_sub(atoi(pWFSPROP.m_SUB)) : pTTS.Set_sub(0);
+		atoi(pWFSPROP.m_TRESHLOW) >= 0 ? pTTS.Set_treshlow(atoi(pWFSPROP.m_TRESHLOW)) : pTTS.Set_treshlow(0);
+		atoi(pWFSPROP.m_TRESHHIGH) >= 0 ? pTTS.Set_treshhigh(atoi(pWFSPROP.m_TRESHHIGH)) : pTTS.Set_treshhigh(0);
+
+		atof(pWFSPROP.m_SZELENS) >= 0 ? pTTS.Set_szelens(atof(pWFSPROP.m_SZELENS)) : pTTS.Set_szelens(0);
+		atof(pWFSPROP.m_PIXSZE) >= 0 ? pTTS.Set_pixsze(atof(pWFSPROP.m_PIXSZE)) : pTTS.Set_pixsze(0);
+		atof(pWFSPROP.m_LWAVE) >= 0 ? pTTS.Set_lwave(atof(pWFSPROP.m_LWAVE)) : pTTS.Set_lwave(0);
+		atof(pWFSPROP.m_FOCUSCAM) >= 0 ? pTTS.Set_focuscam(atof(pWFSPROP.m_FOCUSCAM)) : pTTS.Set_focuscam(0);
+		atof(pWFSPROP.m_LPATH) >= 0 ? pTTS.Set_lpath(atof(pWFSPROP.m_LPATH)) : pTTS.Set_lpath(0);
+		atof(pWFSPROP.m_COEFSHIFT) >= 0 ? pTTS.Set_coefshift(atof(pWFSPROP.m_COEFSHIFT)) : pTTS.Set_coefshift(0);
+
+		atof(pWFSPROP.m_ENTRANCESUB) >= 0 ? pTTS.Set_entrancediameter(atof(pWFSPROP.m_ENTRANCESUB)) : pTTS.Set_entrancediameter(0);
+
+		//pTTS.SaveMirrIni(WFSini);
+		pTTS.ReLoadData();
+	}
+}
+
+
+void CexpAOSDlg::OnBnClickedBtngereftts()
+{
+	if (pTTS.GetConnected()) {
+		if (!pTTS.m_FSTART) {
+			pTTS.m_FSTART = 1;
+			int cntref = GetDlgItemInt(IDC_EWFSREFCNTTTS);
+			if (cntref <= 0) cntref = 1;
+			pTTS.GetRefFrame(cntref);
+			ShowCTTTS();
+			pTTS.DrowFrame(pTTS.outframe, 750, 5, 1.0);
+			pTTS.m_FSTART = 0;
+		}
+		else SetDlgItemText(IDC_SSTSTTS, "Stop cam!");
+	}
+	else SetDlgItemText(IDC_SSTSTTS, "TTS NO connections!");
+}
+
+
+void CexpAOSDlg::OnBnClickedBstattts()
+{
+	CString str;
+	pSTATTTS.SetWindowTextA("Statistics Tilt/tip sensor");
+	str.Format("Current sub");
+	pSTATTTS.SetDlgItemText(IDC_SSUB, str);
+	str.Format("NO Difference");
+	pSTATTTS.SetDlgItemText(IDC_SSUBDIF, str);
+
+
+	pSTATTTS.ShowWindow(SW_SHOW);
+	if (pTTS.GetConnected()) {
+		if (!pTTS.m_FSTART) {
+			pTTS.m_FSTART = 1;
+			SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+			AfxBeginThread(ThreadStatTTSLoop, this, THREAD_PRIORITY_TIME_CRITICAL);
+		}
+		else SetDlgItemText(IDC_SSTSTTS, "Cam already runing!");
+	}
+	else SetDlgItemText(IDC_SSTSTTS, "TTS NO connections!");
+}
+
+UINT ThreadStatTTSLoop(LPVOID pParam)
+{
+	CexpAOSDlg* ptrView = (CexpAOSDlg*)pParam;
+	CString str;
+	double fd,dsp;
+	int i = 0;
+	pTTS.setzerotime();
+	int cnt = pTTS.Get_m_Speccnt();
+	while (pTTS.m_FSTART) {
+		if (pTTS.CameraFrameN()) {
+			for (int j = 0; j < FRAME_COUNT; j++) {
+				if (pTTS.frames[j].receiveStatus == 0) {
+					pTTS.outframe.data = static_cast<uchar*>(pTTS.frames[j].buffer);
+					pTTS.frames[j].receiveStatus = -1;
+
+					pTTS.GetCTOffsetsWfs(pTTS.outframe);
+					pTTS.CTDeqAddOneSub();
+					fd = pTTS.fpsiter();
+
+					if (i % (pTTS.Get_m_Speccnt()) == 0 && i > 1) {
+						pTTS.GetStatCTDeq();
+						dsp = pTTS.CalcDisp(pTTS.CTdecX);
+						pTTS.CalcR0(pTTS.CTdecX, pTTS.m_statonex, dsp);
+						dsp = pWFS.CalcDisp(pWFS.CTdecY);
+						pTTS.CalcR0(pTTS.CTdecY, pTTS.m_statoney, dsp);
+						AfxBeginThread(ThreadDrowSpecTTS, ptrView, THREAD_PRIORITY_HIGHEST);
+					}
+
+					if (i >= cnt) {
+
+						fd > 0.0 ? fd = pTTS.getfps() : fd = 2.0;//gag
+
+						ptrView->SetDlgItemInt(IDC_STTSFPS, static_cast<int>(fd));
+						pTTS.DrowFrame(pTTS.outframe, 750, 5, 1.0);
+						i = 0;
+					}
+
+
+					i++;
+				}
+			}
+
+		}
+	}
+
+	return 0;
+}
+
+UINT ThreadDrowSpecTTS(LPVOID pParam) {
+
+	CexpAOSDlg* ptrView = (CexpAOSDlg*)pParam;
+	CDC* specdc = pSTATTTS.GetDC();
+	CString str;
+	ptrView->GetDlgItemText(IDC_ESCLTTS, str);
+	double scl = atof(str);
+	int cnt = pTTS.Get_m_Speccnt();
+	double fd = pTTS.getfps();
+
+
+	ptrView->ShowSubStatOneSub();
+	ptrView->ShowCn2StatOneSub();
+
+	pTTS.Spectrum(cnt-1, 1.0, fd / 2, fd, pTTS.CTdecX, pTTS.SpecX);// x axis coords
+	pTTS.Spectrum(cnt - 1, 1.0, fd / 2, fd, pTTS.CTdecY, pTTS.SpecY);// y axis coords
+	pTTS.DrowSpectrum(specdc, cnt, 30, 150, scl, static_cast<int>(fd), pTTS.SpecX);
+	pTTS.DrowSpectrum(specdc, cnt, 30, 410, scl, static_cast<int>(fd), pTTS.SpecY);
+	return 0;
+}
+
+void CexpAOSDlg::OnBnClickedBtnstoptts()
+{
+	pTTS.m_FSTART = 0;
+}
+
+
+void CexpAOSDlg::OnBnClickedBtnanlprop()
+{
+	// TODO: Add your control notification handler code here
 }
