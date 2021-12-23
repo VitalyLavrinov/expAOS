@@ -6,15 +6,10 @@
 
 CSensor::CSensor() : CCamera() {
 	LoadIni("default.ini");
-
-	m_Speccnt = 500; //!! change to cntframes in work with model films
-	m_idframe = 0;
 	ReLoadData();
 }
 CSensor::CSensor(const std::string& ini, const char* CamId, const std::string& expname) : CCamera(ini,CamId, expname) {
 	LoadIni(ini);
-	m_Speccnt = 1000; 
-	m_idframe = 0;
 	TurbConstInit();
 	ReLoadData();
 }
@@ -162,7 +157,7 @@ void CSensor::DrowFrame(const cv::Mat& out, int left, int top, double scale) con
 	line(dst, cv::Point(tmpx - 10, tmpy), cv::Point(tmpx + 10, tmpy ), yellow, 1);
 	line(dst, cv::Point(tmpx , tmpy + 10), cv::Point(tmpx , tmpy - 10), yellow, 1);
 
-	if (scale)resize(dst, dst, cv::Size(0, 0), scale, scale, cv::INTER_LINEAR);
+	if (scale)resize(dst, dst, cv::Size(0, 0), scale, scale, cv::INTER_AREA);
 	dcMem.CreateCompatibleDC(odc);
 	bmp.CreateBitmap(dst.cols, dst.rows, 1, 32, dst.data);
 	dcMem.SelectObject(&bmp);
@@ -170,6 +165,10 @@ void CSensor::DrowFrame(const cv::Mat& out, int left, int top, double scale) con
 	bmp.DeleteObject();
 	DeleteDC(dcMem);
 }
+
+
+//Drow m_sub
+//Added Max on subaperture 
 void CSensor::DrowSub(const cv::Mat& out, int left, int top, double scale) const {
 	CBitmap bmp;
 	CDC dcMem;
@@ -197,7 +196,7 @@ void CSensor::DrowSub(const cv::Mat& out, int left, int top, double scale) const
 	tmp2.y = subMax(x, y).y + 3;
 	line(dst, tmp1, tmp2, red, 1);
 
-	if (scale)resize(dst, dst, cv::Size(0, 0), scale, scale, cv::INTER_LINEAR);
+	if (scale)resize(dst, dst, cv::Size(0, 0), scale, scale, cv::INTER_AREA);
 	dcMem.CreateCompatibleDC(odc);
 	bmp.CreateBitmap(dst.cols, dst.rows, 1, 32, dst.data);
 	dcMem.SelectObject(&bmp);
@@ -205,6 +204,8 @@ void CSensor::DrowSub(const cv::Mat& out, int left, int top, double scale) const
 	bmp.DeleteObject();
 	DeleteDC(dcMem);
 }
+
+
 
 // drow wave front surface
 void CSensor::DrowPhase(int left, int top, double scale, int interfer) {
@@ -214,7 +215,7 @@ void CSensor::DrowPhase(int left, int top, double scale, int interfer) {
 		if(interfer) cv::normalize(wfinterf, dst, 255, 0, cv::NORM_MINMAX, CV_8UC1);
 		else cv::normalize(wfphase, dst, 255, 0, cv::NORM_MINMAX, CV_8UC1);
 		cv::cvtColor(dst, dst, cv::COLOR_GRAY2RGBA);
-		if (scale)resize(dst, dst, cv::Size(0, 0), scale, scale, cv::INTER_LINEAR);
+		if (scale)resize(dst, dst, cv::Size(0, 0), scale, scale, cv::INTER_AREA);
 		dcMem.CreateCompatibleDC(wfdc);
 		bmp.CreateBitmap(dst.cols, dst.rows, 1, 32, dst.data);
 		dcMem.SelectObject(&bmp);
@@ -229,6 +230,7 @@ void CSensor::LoadIni(const std::string& ini) {
 	
 	pt::ptree bar;
 	pt::ini_parser::read_ini(ini, bar);
+	m_Speccnt = std::stoi(bar.get<std::string>("General.speccnt"));
 	m_cdx = std::stoi(bar.get<std::string>("General.cdx"));
 	m_cdy = std::stoi(bar.get<std::string>("General.cdy"));
 	m_sdx = std::stoi(bar.get<std::string>("General.sdx"));
@@ -320,10 +322,12 @@ void CSensor::CTDeqAdd() {
 
 //add mesuared vals in deques if one sub
 void CSensor::CTDeqAddOneSub() {
-	CTdecX.pop_front();
-	CTdecX.push_back(CTMaxDif.at<double>(0));
-	CTdecY.pop_front();
-	CTdecY.push_back(CTMaxDif.at<double>(1));
+	if (CTMaxDif.at<double>(0) < 10 && CTMaxDif.at<double>(1) < 10) {
+		CTdecX.pop_front();
+		CTdecX.push_back(CTMaxDif.at<double>(0));
+		CTdecY.pop_front();
+		CTdecY.push_back(CTMaxDif.at<double>(1));
+	}
 }
 
 //calc max & aver val in deq
@@ -344,7 +348,7 @@ void CSensor::GetStatDeq(std::deque<double>& deq,double& maxin, double& averin) 
 
 //get statistic in CT deq
 void CSensor::GetStatCTDeq() {
-		GetStatDeq(CTdecX,m_maxindec.x,m_averindec.x);
+		GetStatDeq(CTdecX, m_maxindec.x, m_averindec.x);
 		GetStatDeq(CTdecY, m_maxindec.y, m_averindec.y);
 }
 
@@ -386,6 +390,7 @@ void CSensor::Spectrum(int N, double f0, double fen, double fd, std::deque<doubl
 
 //drow spectrum on CDC
 void CSensor::DrowSpectrum(CDC* sdc, int N, int x, int y, double scl1, int fd, std::deque<double>& SP) {
+	if (N > 1000) N = 1000;
 	CBitmap bmp;
 	CDC dcMem;
 	cv::Scalar yellow(0, 255, 255);
@@ -534,9 +539,12 @@ void CSensor::GetCTWfsCorr(const cv::Mat& src)
 			k += 2;
 		}
 
-	//tmp.copyTo(ReffKor);
+	tmp.copyTo(ReffKor);
 
 }
+
+
+
 
 //calc offsets coords center of gravity of the spots in subs with calculated RefFrame CofG!! because if Lens(i)==0  offsets coord of spots must be zero!!! 
 void CSensor::GetCTWfs(cv::Mat& src) {
@@ -667,21 +675,31 @@ void CSensor::GetCTOffsetsWfs(cv::Mat& src) {
 void CSensor::GetAccumFrames(int cnt) {
 	cv::Mat treshedframe;
 	int i = 0;
-	for (int ikl = 0; ikl < cnt; ikl++) {
-		if (CameraFrameN()) {
-			for (int j = 0; j < FRAME_COUNT; j++) {
-				if (frames[j].receiveStatus == 0) {
-					outframe.data = static_cast<uchar*>(frames[j].buffer);
-					cv::threshold(outframe, treshedframe, m_treshlow, m_treshhigh, CV_THRESH_TOZERO);
-					cv::accumulate(treshedframe, accumframe);
-					i++;
-					frames[j].receiveStatus = -1;
+	if (cnt <= 0) cnt = 1;
+	if (cnt > 1) {
+				for (int ikl = 0; ikl < cnt; ikl++) {
+					if (CameraFrameN()) {
+						for (int j = 0; j < FRAME_COUNT; j++) {
+							if (frames[j].receiveStatus == 0) {
+								outframe.data = static_cast<uchar*>(frames[j].buffer);
+								cv::threshold(outframe, treshedframe, m_treshlow, m_treshhigh, CV_THRESH_TOZERO);
+								cv::accumulate(treshedframe, accumframe);
+								i++;
+								frames[j].receiveStatus = -1;
+							}
+						}
+					}
 				}
-			}
-
-		}
+				accumframe = accumframe / i;
 	}
-	accumframe = accumframe / i;
+	else {
+		if (CameraFrame()) {
+			outframe = GetFrameMat();
+			cv::threshold(outframe, treshedframe, m_treshlow, m_treshhigh, CV_THRESH_TOZERO);
+			cv::accumulate(treshedframe, accumframe);
+		}
+		accumframe = accumframe / 1;
+	}
 }
 
 // get refframe from sensor cam
@@ -1219,5 +1237,14 @@ void CSensor::CalcR0 (std::deque<double>& diff, turbstat& stat,double Disp) {
 
 	// cn2=DISP/ (С1*L*[K2*D^-1/3 - K3*d^-1/3])
 	stat.m_Cn2 = (Disp / (stat.m_Cn2k1 * m_lpath * sqrbrck))*10000000000000;
+}
+
+
+//CLAHE
+cv::Mat CSensor::Clahe(const cv::Mat& out,double ClipLimit) const {
+	cv::Mat tmp;
+	cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(ClipLimit, cv::Size(8, 8));
+	clahe->apply(out, tmp);
+	return tmp;
 }
 

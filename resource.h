@@ -9,6 +9,7 @@
 #define IDD_DWFSPROP                    134
 #define IDD_DVLT                        136
 #define IDD_DSTAT                       138
+#define IDD_DANL                        140
 #define IDC_BtnCnnctWFS                 1000
 #define IDC_BtnWfsProp                  1000
 #define IDC_BtnStartWFS                 1001
@@ -176,15 +177,24 @@
 #define IDC_BtnStopANL                  1084
 #define IDC_BtnANLProp                  1085
 #define IDC_BSTATANL                    1086
-#define IDC_ESCL2                       1087
 #define IDC_ESCLTTS                     1087
 #define IDC_SS33                        1088
+#define IDC_ESCLANL                     1089
+#define IDC_SS34                        1090
+#define IDC_SANLDX                      1093
+#define IDC_SS35                        1094
+#define IDC_SANLDY                      1095
+#define IDC_SS36                        1096
+#define IDC_SANLMAX                     1097
+#define IDC_SANLCORX                    1098
+#define IDC_SS37                        1099
+#define IDC_SANLCORY                    1100
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        140
+#define _APS_NEXT_RESOURCE_VALUE        142
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1050
 #define _APS_NEXT_SYMED_VALUE           101

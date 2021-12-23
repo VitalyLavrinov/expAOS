@@ -5,7 +5,7 @@
 CWFSControler::CWFSControler() : CSensor() {
 	m_MConnected = false;
 	m_HVon = false;
-	m_nact = NACT;
+
 	m_coef = 0.5;
 	m_u0 = 100.0;
 	std::string fo = FODIR;
@@ -15,7 +15,6 @@ CWFSControler::CWFSControler() : CSensor() {
 CWFSControler::CWFSControler(const std::string& ini, const char* CamId, const std::string& ename) : CSensor(ini, CamId, ename) {
 	m_MConnected = false;
 	m_HVon = false;
-	m_nact = NACT;
 	LoadMirrIni(ini);
 	std::string fo = FODIR;
 	WFSMirrLoadFO(fo);
@@ -24,12 +23,14 @@ CWFSControler::CWFSControler(const std::string& ini, const char* CamId, const st
 void CWFSControler::LoadMirrIni(const std::string& ini) {
 	pt::ptree bar;
 	pt::ini_parser::read_ini(ini, bar);
+	m_nact = std::stod(bar.get<std::string>("Controler.nact"));
 	m_coef = std::stod(bar.get<std::string>("Controler.coef"));
 	m_u0= std::stod(bar.get<std::string>("Controler.u0"));
 }
 
 void CWFSControler::SaveMirrIni(const std::string& ini) {
 	pt::ptree bar;
+	bar.put("General.speccnt", Get_m_Speccnt());
 	bar.put("General.offsetx", GetOffsetx());
 	bar.put("General.offsety", GetOffsety());
 	bar.put("General.cdx", Get_cdx());
@@ -65,6 +66,7 @@ void CWFSControler::SaveMirrIni(const std::string& ini) {
 	bar.put("Statistics.r0k3y", Get_r0k3y());
 	bar.put("Statistics.cn2k1", Get_cn2k1());
 
+	bar.put("Controler.coef", m_nact);
 	bar.put("Controler.coef", m_coef);
 	bar.put("Controler.u0", m_u0);
 	pt::write_ini(ini, bar);

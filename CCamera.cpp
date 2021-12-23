@@ -98,7 +98,7 @@
             CDC dcMem;
             cv::Mat dst;
             cvtColor(out, dst, cv::COLOR_GRAY2RGBA);
-            if (scale)resize(dst, dst, cv::Size(0, 0), scale, scale, cv::INTER_LINEAR);
+            if (scale)resize(dst, dst, cv::Size(0, 0), scale, scale, cv::INTER_AREA);
             dcMem.CreateCompatibleDC(outdc);
             bmp.CreateBitmap(dst.cols, dst.rows, 1, 32, dst.data);
             dcMem.SelectObject(&bmp);

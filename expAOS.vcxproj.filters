@@ -66,6 +66,9 @@
     <ClInclude Include="CSTAT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CANL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="expAOS.cpp">
@@ -99,6 +102,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CSTAT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CANL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

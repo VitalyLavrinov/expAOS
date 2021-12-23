@@ -35,7 +35,7 @@ private:
 	CDC* wfdc;// output CDC to wavefront
 
 	cv::Mat_<cv::Rect> wnds;// analysis window rects
-	cv::Mat_<cv::Rect> subs;// subapertures rects
+	//cv::Mat_<cv::Rect> subs;// subapertures rects
 	cv::Mat x0; // grid to zrnk coef
 	cv::Mat y0;
 	cv::Mat x0l; // -||- but only active lenses
@@ -57,7 +57,6 @@ private:
 	void LoadIni(const std::string& ini);// boost::fsystem format of writing and reading raises questions !!!
 
 	unsigned int m_Speccnt;// sample length for spectrum calc
-	unsigned int m_idframe;//
 	cv::Point2d m_maxindec;// max val in deque of (x,y)
 	cv::Point2d m_averindec;// abs(mean) val in deque of (x,y)
 
@@ -86,6 +85,7 @@ private:
 	void TurbConstInit();
 
 public:
+	cv::Mat_<cv::Rect> subs;// subapertures rects
 	using CCamera::frames;//frames buffer
 	cv::Mat outframe;// drow array
 	cv::Mat accumframe;// array to get rafframe from cnt frames
@@ -135,7 +135,7 @@ public:
 	};
 	void ReLoadData();// called when the sensor parameters are changed
 	virtual void DrowFrame(const cv::Mat& out, int left, int top, double scale) const; //Drow cam.frame with left top offsets with scale. 
-	virtual void DrowSub(const cv::Mat& out, int left, int top, double scale) const;
+	virtual void DrowSub(const cv::Mat& out, int left, int top, double scale) const;//Drow m_sub
 	void CheckLens(const std::string& ini);// read active lenses from file & reload data as need
 	void GetAccumFrames(int cnt);//get accumulate cnt frames matrix with tresholding   into cvMat accumframe
     void GetRefFrame(int cnt); // get refframe from sensor cam
@@ -146,6 +146,7 @@ public:
 	void GetCTOffsetsWfs(cv::Mat& src);//!!CALLed GetMaxWfs & GetCTWfs// calc offsets between CoG coords & RefFrame coordsin subs(without nonactive lenses, its==0.0)
 
 	void GetCTWfsCorr(const cv::Mat& src);//calc subapertures images offsets
+
 
 	/*coef. Zernike modes*/
 	cv::Mat Get_Zrnk(cv::Mat& difcor, cv::Mat& refar);//calculate Zernike coef.
@@ -256,4 +257,6 @@ public:
 	double Get_r0k3y() const { return m_r0k3y; }//getter
 	double Get_cn2k1() const { return m_cn2k1; }//getter
 
+
+	cv::Mat Clahe(const cv::Mat& out, double ClipLimit) const;//CLAHE  8x8
 };

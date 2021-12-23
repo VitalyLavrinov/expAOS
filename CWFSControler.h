@@ -4,7 +4,6 @@
 #include "WFCinterface.h"//fckng realisation! only for DEBUG WIN32! & with mirror GUI
 constexpr int DEVN(31);// for U-Flex-56-HEX-59
 constexpr LPCSTR DEVSTR("eth_Xv622.dll");// dll for U-Flex-56-HEX-59
-constexpr int NACT(59);// 59 electrodes are used
 constexpr char FODIR[] = "FO";// mmmmmm  more then 20++ std::string DIR("FO");
 
 class CWFSControler : public CSensor
