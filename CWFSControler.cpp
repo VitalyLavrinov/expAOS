@@ -23,7 +23,7 @@ CWFSControler::CWFSControler(const std::string& ini, const char* CamId, const st
 void CWFSControler::LoadMirrIni(const std::string& ini) {
 	pt::ptree bar;
 	pt::ini_parser::read_ini(ini, bar);
-	m_nact = std::stod(bar.get<std::string>("Controler.nact"));
+	m_nact = std::stoi(bar.get<std::string>("Controler.nact"));
 	m_coef = std::stod(bar.get<std::string>("Controler.coef"));
 	m_u0= std::stod(bar.get<std::string>("Controler.u0"));
 }
@@ -66,7 +66,7 @@ void CWFSControler::SaveMirrIni(const std::string& ini) {
 	bar.put("Statistics.r0k3y", Get_r0k3y());
 	bar.put("Statistics.cn2k1", Get_cn2k1());
 
-	bar.put("Controler.coef", m_nact);
+	bar.put("Controler.nact", m_nact);
 	bar.put("Controler.coef", m_coef);
 	bar.put("Controler.u0", m_u0);
 	pt::write_ini(ini, bar);
@@ -152,7 +152,7 @@ void CWFSControler::WFSMirrPowerDown() {
 void CWFSControler::WFSMirrSetUGroupClose(cv::Mat& D)
 {
 	UApplied = Uregister + ( D * m_coef);
-	UApplied.copyTo(Uregister);
+	Uregister= UApplied.clone();
 	int actid = 0;
 	for (int i = 1; i <= m_nact; i++) {
 		if (actarray.at<UINT8>(i - 1) == 1) {

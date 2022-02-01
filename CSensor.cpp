@@ -14,6 +14,8 @@ CSensor::CSensor(const std::string& ini, const char* CamId, const std::string& e
 	ReLoadData();
 }
 
+
+
 //change or init all grids, arrays after reloading sensor parameters 
 void CSensor::TurbConstInit() {
 	//CONSTANT FROM INI file to r0=r0K1*lwave^6/5 *(  [r0K2*D^-1/3 - r0K3(xy)*d^-1/3] / DISP )^3/5
@@ -166,35 +168,48 @@ void CSensor::DrowFrame(const cv::Mat& out, int left, int top, double scale) con
 	DeleteDC(dcMem);
 }
 
+//Get m_sub cvMat
+cv::Mat CSensor::GetSub(const cv::Mat& out) {
+	cv::Mat tmp;
+	int x, y;
+	x = static_cast<int>(m_sub % m_srastr) - 1;
+	y = static_cast<int>(m_sub / m_srastr);
+	if (m_srastr <= 1) { x = 0; y = 0; }
+	tmp = out(subs(x, y));
+	return tmp;
+}
+
 
 //Drow m_sub
 //Added Max on subaperture 
-void CSensor::DrowSub(const cv::Mat& out, int left, int top, double scale) const {
+void CSensor::DrowSub(const cv::Mat& out, int left, int top, double scale, int dop) const {
 	CBitmap bmp;
 	CDC dcMem;
-	cv::Mat tmp;
+	 cv::Mat tmp;
 	//cv::Scalar yellow(0, 255, 255);
 	//cv::Scalar green(0, 255, 0);
 	cv::Scalar red(0, 0, 255);
 	cv::Mat dst;
 	cv::Point tmp1, tmp2;
-	int x, y;
-	    x = static_cast<int>(m_sub % m_srastr) - 1;
-		y = static_cast<int>(m_sub / m_srastr);
-		if (m_srastr <= 1) { x = 0; y = 0; }
 
+	int x, y;
+	x = static_cast<int>(m_sub % m_srastr) - 1;
+	y = static_cast<int>(m_sub / m_srastr);
+	if (m_srastr <= 1) { x = 0; y = 0; }
 	tmp = out(subs(x, y));
 
 	cvtColor(tmp, dst, cv::COLOR_GRAY2RGBA);
 
-	tmp1 = tmp2 = subMax(x , y);
-	tmp1.x = subMax(x, y).x - 3;
-	tmp2.x = subMax(x, y).x + 3;
-	line(dst, tmp1, tmp2, red, 1);
-	tmp1 = tmp2 = subMax(x, y);
-	tmp1.y = subMax(x, y).y - 3;
-	tmp2.y = subMax(x, y).y + 3;
-	line(dst, tmp1, tmp2, red, 1);
+	if (dop) {
+		tmp1 = tmp2 = subMax(x, y);
+		tmp1.x = subMax(x, y).x - 3;
+		tmp2.x = subMax(x, y).x + 3;
+		line(dst, tmp1, tmp2, red, 1);
+		tmp1 = tmp2 = subMax(x, y);
+		tmp1.y = subMax(x, y).y - 3;
+		tmp2.y = subMax(x, y).y + 3;
+		line(dst, tmp1, tmp2, red, 1);
+	}
 
 	if (scale)resize(dst, dst, cv::Size(0, 0), scale, scale, cv::INTER_AREA);
 	dcMem.CreateCompatibleDC(odc);
@@ -516,8 +531,8 @@ void CSensor::GetMaxWfs(cv::Mat& src) {
 
 //calc subapertures images offsets
 // if func used in closeloop needs reload ReffKor array(refframe) by lust frame!
-// another way is to use the previously accumulated image (in GetRefframe). Not very suitable for a point source.
-void CSensor::GetCTWfsCorr(const cv::Mat& src)
+// another way is to use the previously accumulated image (in GetRefframe). Not very suitable for a point source. Using mode=1 if correletion without closing loop
+void CSensor::GetCTWfsCorr(const cv::Mat& src, int mode)
 {
 	cv::Point2d sft;
 	cv::Mat tmp;
@@ -539,7 +554,7 @@ void CSensor::GetCTWfsCorr(const cv::Mat& src)
 			k += 2;
 		}
 
-	tmp.copyTo(ReffKor);
+	if(!mode) ReffKor=tmp.clone();
 
 }
 
@@ -677,6 +692,7 @@ void CSensor::GetAccumFrames(int cnt) {
 	int i = 0;
 	if (cnt <= 0) cnt = 1;
 	if (cnt > 1) {
+		accumframe.zeros(m_cdx, m_cdy, CV_64F);
 				for (int ikl = 0; ikl < cnt; ikl++) {
 					if (CameraFrameN()) {
 						for (int j = 0; j < FRAME_COUNT; j++) {
@@ -696,10 +712,13 @@ void CSensor::GetAccumFrames(int cnt) {
 		if (CameraFrame()) {
 			outframe = GetFrameMat();
 			cv::threshold(outframe, treshedframe, m_treshlow, m_treshhigh, CV_THRESH_TOZERO);
+			//accumframe = treshedframe.clone();
+			accumframe.zeros(m_cdx, m_cdy, CV_64F);
 			cv::accumulate(treshedframe, accumframe);
+			accumframe = accumframe / 1.0;
 		}
-		accumframe = accumframe / 1;
 	}
+	GoodFrame = outframe.clone();
 }
 
 // get refframe from sensor cam
@@ -710,14 +729,14 @@ void CSensor::GetRefFrame(int cnt) {
 		//may be bad to a point source(need use lust frame without accum?) in closeloop pointless
 		//outframe.copyTo(ReffKor); 
 		//ReffKor.convertTo(ReffKor, CV_64F);
-		accumframe.copyTo(ReffKor);
+		ReffKor=accumframe.clone();
 		/**/
-		accumframe.convertTo(outframe, CV_8UC1, 1.0);
+		//accumframe.convertTo(outframe, CV_8UC1, 1.0);
 		accumframe.zeros(m_cdx, m_cdy, CV_64F);
 
-		GetMaxWfs(outframe);
-		GetCTWfs(outframe);
-		CTMax.copyTo(CTMaxReff);
+		GetMaxWfs(GoodFrame);
+		GetCTWfs(GoodFrame);
+		CTMaxReff= CTMax.clone();
 }
 
 //calculate coef. Zernike offsets from difcor
@@ -1240,11 +1259,200 @@ void CSensor::CalcR0 (std::deque<double>& diff, turbstat& stat,double Disp) {
 }
 
 
+/**************************IMAGE BLOCK************************************/
+
+
 //CLAHE
-cv::Mat CSensor::Clahe(const cv::Mat& out,double ClipLimit) const {
+cv::Mat CSensor::Clahe(const cv::Mat& out,double ClipLimit,int gridsize) const {
 	cv::Mat tmp;
-	cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(ClipLimit, cv::Size(8, 8));
+	cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(ClipLimit, cv::Size(gridsize, gridsize));
 	clahe->apply(out, tmp);
 	return tmp;
 }
 
+//circle 2d optical transfer function
+void CSensor::CalcPsf(cv::Mat& out, cv::Size fsize, int radius) {
+	//r=1,22*(lwave/D) :)
+	cv::Mat h(fsize, CV_32F, cv::Scalar(0));
+	cv::Point point(fsize.width / 2, fsize.height / 2);
+	cv::circle(h, point, radius, 255, -1, 8);
+	cv::Scalar summa = sum(h);
+	out = h / summa[0];
+}
+
+//gradient tensor 2d  optical transfer function
+void CSensor::CalcPsf(cv::Mat& out, cv::Size fsize, double len, double angel) {
+	cv::Mat h(fsize, CV_32F, cv::Scalar(0));
+	cv::Point point(fsize.width / 2, fsize.height / 2);
+	cv::ellipse(h, point, cv::Size(0, cvRound(static_cast<double>(len) / 2.0)), 90.0 - angel, 0, 360, cv::Scalar(255), -1);
+	cv::Scalar summa = sum(h);
+	out = h / summa[0];
+}
+
+//gradient tensor 2d  optical transfer function
+void CSensor::CalcPsfOffsets(cv::Mat& out, cv::Size fsize, double x, double y) {
+	double len = sqrt(x * x + y * y);
+	double angel = atan((x / y)) * 57.2958;
+	cv::Mat h(fsize, CV_32F, cv::Scalar(0));
+	cv::Point point(fsize.width / 2, fsize.height / 2);
+	cv::ellipse(h, point, cv::Size(0, cvRound(static_cast<double>(len) / 2.0)), 90.0 - angel, 0, 360, cv::Scalar(255), -1);
+	cv::Scalar summa = sum(h);
+	out = h / summa[0];
+}
+
+//system 2d optical transfer function (aperture diameter & Fried parameter)
+void CSensor::CalcOtf(cv::Mat& out, cv::Size fsize, double diameter, double fried) {
+	cv::Mat h(fsize, CV_32F, cv::Scalar(0));
+	cv::Mat r = cv::Mat::zeros(fsize, CV_32F);
+	cv::Mat rr = cv::Mat::zeros(fsize, CV_32F);
+
+	for (int i = 0; i < out.cols; i++)
+		for (int j = 0; j < out.rows; j++) {
+			r.at<float>(i, j) = sqrt(i * i + j * j)/ diameter;
+			rr.at<float>(i, j) = sqrt(i * i + j * j) / fried;
+		}
+
+	double rd;
+	for(int i=0; i<out.cols; i++)
+		for (int j = 0; j < out.rows; j++) {
+			rd = r.at<float>(i, j);
+			h.at<float>(i, j) = (acos(rd)- rd * sqrt(1 - rd*rd)) * exp(3.44 * pow(rr.at<float>(i, j),5.0/3.0) * (1 - pow(rd,1.0 / 3.0)));
+		}
+	out = h;
+}
+
+//shift to FFT
+void CSensor::shifttofft(const cv::Mat& in, cv::Mat& out)
+{
+	cv::Mat tmp;
+	out = in.clone();
+	int cx = out.cols / 2;
+	int cy = out.rows / 2;
+	cv::Mat q0(out, cv::Rect(0, 0, cx, cy));
+	cv::Mat q1(out, cv::Rect(cx, 0, cx, cy));
+	cv::Mat q2(out, cv::Rect(0, cy, cx, cy));
+	cv::Mat q3(out, cv::Rect(cx, cy, cx, cy));
+	q0.copyTo(tmp);
+	q3.copyTo(q0);
+	tmp.copyTo(q3);
+	q1.copyTo(tmp);
+	q2.copyTo(q1);
+	tmp.copyTo(q2);
+}
+
+//Wiener filter Calc OTF from CalcPSF OTF=F[PSF] +Noise
+void CSensor::GetWiener(const cv::Mat& OTF, cv::Mat& out, double SNR) {
+	cv::Mat shiftedOTF;
+	shifttofft(OTF, shiftedOTF);
+	cv::Mat planes[2] = { cv::Mat_<float>(shiftedOTF.clone()), cv::Mat::zeros(shiftedOTF.size(), CV_32F) };
+	cv::Mat complexI;
+	cv::merge(planes, 2, complexI);
+	cv::dft(complexI, complexI);
+	cv::split(complexI, planes);
+	cv::Mat denom;
+	pow(abs(planes[0]), 2, denom);
+	denom += (1.0 / SNR);
+	cv::divide(planes[0], denom, out);
+}
+//apply Wiener filter
+void CSensor::Filtering(const cv::Mat& in, cv::Mat& out, const cv::Mat& filter) {
+	cv::Mat planes[2] = { cv::Mat_<float>(in.clone()), cv::Mat::zeros(in.size(), CV_32F) };
+	cv::Mat complexI;
+	cv::merge(planes, 2, complexI);
+	cv::dft(complexI, complexI, cv::DFT_SCALE);
+	cv::Mat planesH[2] = { cv::Mat_<float>(filter.clone()), cv::Mat::zeros(filter.size(), CV_32F) };
+	cv::Mat complexH;
+	cv::merge(planesH, 2, complexH);
+	cv::Mat complexIH;
+	cv::mulSpectrums(complexI, complexH, complexIH, 0);
+	cv::idft(complexIH, complexIH);
+	cv::split(complexIH, planes);
+	out = planes[0];
+	cv::normalize(out, out, 0, 255, cv::NORM_MINMAX);
+	out.convertTo(out, CV_8UC1);
+}
+
+//get Peak signal-to-noise ratio (& mean squared error for two images are the same == zero !!! divide by zero)
+std::pair<double, double> CSensor::getPSNR(const cv::Mat& ref, const cv::Mat& car) {
+	cv::Mat tmp;
+	cv::absdiff(ref, car, tmp);
+	tmp.convertTo(tmp, CV_64F);
+	tmp = tmp.mul(tmp);
+	double sse = cv::sum(tmp)[0];//only one chchannel
+	if (sse <= 1e-10) // for small values return zero
+		return std::make_pair(0.0, 0.0);
+	else {
+		double mse = sse / static_cast<double>(car.total());
+		double psnr = 10.0 * log10((255 * 255) / mse);
+		return std::make_pair(mse, psnr);
+	}
+}
+//get structure similarity 
+double CSensor::getMSSIM(const cv::Mat & ref, const cv::Mat & car) {
+		 double C1 = 6.5025, C2 = 58.5225; //consts for cv_8u
+		cv::Mat tmpref,tmpcar;
+		ref.convertTo(tmpref, CV_64F);           
+		car.convertTo(tmpcar, CV_64F);
+		// ^2
+		cv::Mat tmpref2 = tmpref.mul(tmpref);
+		cv::Mat tmpcar2 = tmpcar.mul(tmpcar);        
+		cv::Mat refcar = tmpref.mul(tmpcar); //ref*car     
+
+		cv::Mat mu1, mu2;                   
+		cv::GaussianBlur(tmpref, mu1, cv::Size(11, 11), 1.5);
+		cv::GaussianBlur(tmpcar, mu2, cv::Size(11, 11), 1.5);
+		cv::Mat mu1_2 = mu1.mul(mu1);
+		cv::Mat mu2_2 = mu2.mul(mu2);
+		cv::Mat mu1_mu2 = mu1.mul(mu2);
+		cv::Mat sigma1_2, sigma2_2, sigma12;
+		cv::GaussianBlur(tmpref2, sigma1_2, cv::Size(11, 11), 1.5);
+		sigma1_2 -= mu1_2;
+		cv::GaussianBlur(tmpcar2, sigma2_2, cv::Size(11, 11), 1.5);
+		sigma2_2 -= mu2_2;
+		cv::GaussianBlur(refcar, sigma12, cv::Size(11, 11), 1.5);
+		sigma12 -= mu1_mu2;
+		cv::Mat t1, t2, t3;
+		t1 = 2 * mu1_mu2 + C1;
+		t2 = 2 * sigma12 + C2;
+		t3 = t1.mul(t2);                 // t3 = ((2*mu1_mu2 + C1).*(2*sigma12 + C2))
+		t1 = mu1_2 + mu2_2 + C1;
+		t2 = sigma1_2 + sigma2_2 + C2;
+		t1 = t1.mul(t2);                 // t1 =((mu1_2 + mu2_2 + C1).*(sigma1_2 + sigma2_2 + C2))
+		cv::Mat ssim_map;
+		cv::divide(t3, t1, ssim_map);        // ssim_map =  t3./t1;
+		double mssim = cv::mean(ssim_map)[0];   // mssim = average of ssim map
+		return mssim;
+	}
+
+//get AVERAGE GRADIENT  :) cv::calcBlurriness()
+double CSensor::getAvrGrd( const cv::Mat& car) {
+	//g=1/M*N * sqrt((df/dx)^2+(df/dy)^2) / sqrt(2)
+	// this is Sobel sqrt(Gx^2+Gy^2)
+	double grad;
+	cv::Mat Gx, Gy,G;
+	cv::Sobel(car, Gx, CV_64F, 1, 0);// x
+	cv::Sobel(car, Gy, CV_64F, 0, 1);//y
+	//cv::magnitude(Gx, Gy, G);
+	//return cv::sum(G)[0];
+	Gx = cv::abs(Gx);
+	Gy = cv::abs(Gy);
+	Gx += Gy;
+	grad = cv::sum(Gx)[0];
+	grad = grad / (car.total() * sqrt(2));
+	return grad;
+}
+
+//get image entropy
+double CSensor::getEntropy(const cv::Mat& car) {
+	cv::Mat hist;
+	int histSize = 256;
+	float range[] = {0, 256};
+	const float* histRange = {range};
+	cv::calcHist(&car, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, TRUE, FALSE);
+	hist /= car.total();
+	hist += 1e-6; 
+	cv::Mat logP;
+	cv::log(hist, logP);
+	double entropy = -1 * cv::sum(hist.mul(logP)).val[0];
+	return entropy;
+}

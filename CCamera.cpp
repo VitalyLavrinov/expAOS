@@ -30,7 +30,6 @@
             m_exposname = exposname;
             m_FSTART = false;
             m_Connected = false;
-            m_fps = 0.0;
             err = NULL;  
             pCameras = NULL;             // A list of camera details
             nCount = 0;                // Number of found cameras

@@ -100,7 +100,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>c:\opencv\build\x86\vc14\lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_core2413.lib;opencv_core2413d.lib;opencv_highgui2413.lib;opencv_highgui2413d.lib;opencv_imgproc2413.lib;opencv_imgproc2413d.lib;VimbaC.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_core2413.lib;opencv_core2413d.lib;opencv_highgui2413.lib;opencv_highgui2413d.lib;opencv_imgproc2413.lib;opencv_imgproc2413d.lib;opencv_videostab2413.lib;opencv_videostab2413d.lib;VimbaC.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -190,9 +190,12 @@
   <ItemGroup>
     <ClInclude Include="CANL.h" />
     <ClInclude Include="CCamera.h" />
+    <ClInclude Include="CCOM.h" />
     <ClInclude Include="CCT.h" />
+    <ClInclude Include="CMDLController.h" />
     <ClInclude Include="CSensor.h" />
     <ClInclude Include="CSTAT.h" />
+    <ClInclude Include="CTTSController.h" />
     <ClInclude Include="CVLT.h" />
     <ClInclude Include="CWFSControler.h" />
     <ClInclude Include="CWFSPROP.h" />
@@ -210,9 +213,12 @@
   <ItemGroup>
     <ClCompile Include="CANL.cpp" />
     <ClCompile Include="CCamera.cpp" />
+    <ClCompile Include="CCOM.cpp" />
     <ClCompile Include="CCT.cpp" />
+    <ClCompile Include="CMDLController.cpp" />
     <ClCompile Include="CSensor.cpp" />
     <ClCompile Include="CSTAT.cpp" />
+    <ClCompile Include="CTTSController.cpp" />
     <ClCompile Include="CVLT.cpp" />
     <ClCompile Include="CWFSControler.cpp" />
     <ClCompile Include="CWFSPROP.cpp" />

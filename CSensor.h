@@ -116,6 +116,8 @@ public:
 	cv::Mat wfCorrl;
 	cv::Mat Han;// Hanning window
 	cv::Mat ReffKor;// reference frame for calculating correlation
+	cv::Mat GoodFrame;// reference frame to image prop calc
+
 
 	CSensor();
 	CSensor(const std::string& ini, const char* CamId, const std::string& expname);
@@ -134,8 +136,9 @@ public:
 		CTDiffY.~deque();
 	};
 	void ReLoadData();// called when the sensor parameters are changed
-	virtual void DrowFrame(const cv::Mat& out, int left, int top, double scale) const; //Drow cam.frame with left top offsets with scale. 
-	virtual void DrowSub(const cv::Mat& out, int left, int top, double scale) const;//Drow m_sub
+	virtual void DrowFrame(const cv::Mat& out, int left, int top, double scale) const; //Drow cam.frame with left top offsets with scale.
+	cv::Mat  GetSub(const cv::Mat& out);//Get m_sub cvMat
+	virtual void DrowSub(const cv::Mat& out, int left, int top, double scale,int dop=1) const;//Drow m_sub
 	void CheckLens(const std::string& ini);// read active lenses from file & reload data as need
 	void GetAccumFrames(int cnt);//get accumulate cnt frames matrix with tresholding   into cvMat accumframe
     void GetRefFrame(int cnt); // get refframe from sensor cam
@@ -145,7 +148,7 @@ public:
 	void GetCTWfs(cv::Mat& src);//!! may be need remaking //calc offsets coords center of gravity of the spots in subs
 	void GetCTOffsetsWfs(cv::Mat& src);//!!CALLed GetMaxWfs & GetCTWfs// calc offsets between CoG coords & RefFrame coordsin subs(without nonactive lenses, its==0.0)
 
-	void GetCTWfsCorr(const cv::Mat& src);//calc subapertures images offsets
+	void GetCTWfsCorr(const cv::Mat& src, int mode);//calc subapertures images offsets use mode =1 without closing loop
 
 
 	/*coef. Zernike modes*/
@@ -257,6 +260,19 @@ public:
 	double Get_r0k3y() const { return m_r0k3y; }//getter
 	double Get_cn2k1() const { return m_cn2k1; }//getter
 
-
-	cv::Mat Clahe(const cv::Mat& out, double ClipLimit) const;//CLAHE  8x8
+	/****** image *******/
+	cv::Mat Clahe(const cv::Mat& out, double ClipLimit, int gridsize) const;//CLAHE Histogram Equalization  
+	void CalcPsf(cv::Mat& out, cv::Size fsize, int radius);//Circular Point optical transfer function
+	void CalcPsf(cv::Mat& out, cv::Size fsize, double len, double angel);//gradient tensor optical transfer function
+	void CalcPsfOffsets(cv::Mat& out, cv::Size fsize, double x, double y);
+	void CalcOtf(cv::Mat& out, cv::Size fsize, double diameter, double fried);//system optical transfer function (aperture diameter &Fried parameter
+	void shifttofft(const cv::Mat& in, cv::Mat& out);//shift to FFT
+	void GetWiener(const cv::Mat& PSF, cv::Mat& out, double SNR);	//Wiener filter
+	void Filtering(const cv::Mat& in, cv::Mat& out, const cv::Mat& filter);	//apply Wiener filter
+	
+	std::pair<double, double> getPSNR(const cv::Mat& ref, const cv::Mat& car);//get <first>Mean squared error <second> Peak signal to noise ratio 
+	double getMSSIM(const cv::Mat& ref, const cv::Mat& car);//get structure similarity 
+	double getAvrGrd(const cv::Mat& car);//get AVERAGE GRADIENT
+	double getEntropy(const cv::Mat& car); //get image entropy
 };
+

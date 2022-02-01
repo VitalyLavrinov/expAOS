@@ -4,6 +4,7 @@
 
 #pragma once
 #include "CWFSControler.h"
+#include "CTTSController.h"
 #include "CCT.h"
 #include "CZRNK.h"
 #include "CWFSPROP.h"
@@ -14,16 +15,21 @@
 UINT ThreadDrowWFS(LPVOID pParam);// wavefront sensor
 UINT ThreadGrabWFS(LPVOID pParam);//WFS grab *flm from wavefront sensor
 UINT ThreadDrowWFSLoop(LPVOID pParam);//WFS open loop
+
 UINT ThreadGrabFO(LPVOID pParam);//WFS get response function from mirror
 UINT ThreadWFSCloseLoop(LPVOID pParam);//WFS closeLoop
 UINT ThreadStatWFSLoop(LPVOID pParam);//WFS Cn2 and R0
 UINT ThreadDrowSpec(LPVOID pParam);// Drowing spectrum WFS
 UINT ThreadDrowTTS(LPVOID pParam);// Tilt/Tip sensor
 UINT ThreadStatTTSLoop(LPVOID pParam);//TT sensor Cn2 and R0
+UINT ThreadDrowTTSOpenLoop(LPVOID pParam);//tip/tilt OpenLoop
+UINT ThreadDrowTTSCloseLoop(LPVOID pParam);//tip/tilt closeLoop
+UINT ThreadShowDatTTS(LPVOID pParam);
 UINT ThreadDrowSpecTTS(LPVOID pParam);// Drowing spectrum TTS
 UINT ThreadDrowANL(LPVOID pParam);// Tilt/Tip sensor
 UINT ThreadStatANLLoop(LPVOID pParam);//TT sensor Cn2 and R0
 UINT ThreadDrowSpecANL(LPVOID pParam);// Drowing spectrum TTS
+UINT ThreadPlayTT(LPVOID pParam);//Paying TipTilts from files
 // CexpAOSDlg dialog
 class CexpAOSDlg : public CDialogEx
 {
@@ -74,6 +80,7 @@ public:
 	afx_msg void IniLensButt();
 	afx_msg void IniStat();
 	afx_msg void IniStatTTS();
+	afx_msg void ShowTTSVLT();
 	afx_msg void IniStatANL();
 	afx_msg void ShowSubStat();
 	afx_msg void ShowSubStatOneSub();
@@ -112,4 +119,16 @@ public:
 	afx_msg void OnBnClickedBstatanl();
 	afx_msg void OnBnClickedBtnstopanl();
 	afx_msg void OnBnClickedBtnstartanl();
+	afx_msg void OnBnClickedBtnttsmirrconnect();
+	afx_msg void OnBnClickedBsetvlttts();
+	afx_msg void OnBnClickedBsetvltttszero();
+	afx_msg void OnBnClickedBtnopenlooptts();
+	afx_msg void OnBnClickedBtncloselooptts();
+	afx_msg void OnBnClickedBtnttsmirrconnect2();
+	afx_msg void OnBnClickedBsetvltg();
+	afx_msg void OnBnClickedBsetvltgzero();
+	afx_msg void OnBnClickedBtnloadxtt();
+	afx_msg void OnBnClickedBtnloadytt();
+	afx_msg void OnBnClickedBtnstartg();
+	afx_msg void OnBnClickedBtnstopg();
 };

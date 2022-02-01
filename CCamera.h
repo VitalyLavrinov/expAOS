@@ -5,6 +5,7 @@
 #include <deque>
 #include <algorithm>
 #include <opencv2/opencv.hpp>
+#include <opencv2/videostab/deblurring.hpp>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>

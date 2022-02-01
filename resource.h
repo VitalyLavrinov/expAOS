@@ -22,19 +22,25 @@
 #define IDC_EDIT1                       1007
 #define IDC_EEXPOS                      1007
 #define IDC_ESDX                        1007
+#define IDC_EGS                         1007
 #define IDC_EDIT2                       1008
 #define IDC_EWFSREFCNT                  1008
 #define IDC_ESDY                        1008
+#define IDC_EKSZ                        1008
 #define IDC_BtnGeRefWFS                 1009
 #define IDC_ESWND                       1009
+#define IDC_EWSNR                       1009
 #define IDC_SS                          1010
 #define IDC_ELEFT                       1010
+#define IDC_EPSFR                       1010
 #define IDC_SWFSFPS                     1011
+#define IDC_ELEN                        1011
 #define IDC_CT                          1012
 #define IDC_BtnWFSLESCHOISE             1012
 #define IDC_ETOP                        1012
 #define IDC_ZRNK                        1013
 #define IDC_BtnWFSLESCHOISESAVE         1013
+#define IDC_EOFFX                       1013
 #define IDC_BtnCnnctWFS2                1014
 #define IDC_ESHFTCOL                    1015
 #define IDC_BtnSetLMore                 1015
@@ -181,6 +187,8 @@
 #define IDC_SS33                        1088
 #define IDC_ESCLANL                     1089
 #define IDC_SS34                        1090
+#define IDC_SS38                        1091
+#define IDC_ECOEFX                      1092
 #define IDC_SANLDX                      1093
 #define IDC_SS35                        1094
 #define IDC_SANLDY                      1095
@@ -189,6 +197,45 @@
 #define IDC_SANLCORX                    1098
 #define IDC_SS37                        1099
 #define IDC_SANLCORY                    1100
+#define IDC_BtnTTSMirrConnect           1101
+#define IDC_ECOEFY                      1102
+#define IDC_BtnOpenLoopTTS              1103
+#define IDC_STTSMIR                     1104
+#define IDC_BSETVLTTTS                  1105
+#define IDC_EVLTGX                      1106
+#define IDC_EVLTGY                      1107
+#define IDC_BSETVLTTTSZERO              1108
+#define IDC_BtnCloseLoopTTS             1109
+#define IDC_SS39                        1110
+#define IDC_ECOEFTTS                    1111
+#define IDC_BtnLoadXTT                  1112
+#define IDC_BtnLoadYTT                  1113
+#define IDC_SS40                        1114
+#define IDC_ECOEFGX                     1115
+#define IDC_ECOEFGY                     1116
+#define IDC_BSETVLTG                    1117
+#define IDC_EVLTGGX                     1118
+#define IDC_EVLTGGY                     1119
+#define IDC_BSETVLTGZERO                1120
+#define IDC_BtnTTSMirrConnect2          1121
+#define IDC_SSTSGEN                     1122
+#define IDC_SFTTCNT                     1123
+#define IDC_SS41                        1124
+#define IDC_ETIME                       1125
+#define IDC_EGENFPS                     1125
+#define IDC_BtnStartG                   1126
+#define IDC_SLIDER                      1126
+#define IDC_BtnStopG                    1127
+#define IDC_SCLL                        1127
+#define IDC_SS42                        1128
+#define IDC_ECOEFGEN                    1129
+#define IDC_STTFNFR                     1130
+#define IDC_SORPN                       1130
+#define IDC_SGENFPS                     1131
+#define IDC_EANGEL                      1131
+#define IDC_SS43                        1132
+#define IDC_EOFY                        1132
+#define IDC_EOFFY                       1132
 
 // Next default values for new objects
 // 
@@ -196,7 +243,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        142
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1050
+#define _APS_NEXT_CONTROL_VALUE         1132
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
